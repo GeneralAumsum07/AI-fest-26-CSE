@@ -60,6 +60,29 @@ def test_nothing_personal_is_logged(tmp_path, jpg, mp4_file, scripted_backends, 
     assert not any(secret in caplog.text for secret in state.secrets() if len(secret) >= 4)
 
 
+def test_a_bad_audio_track_keeps_the_video_frames(tmp_path, mp4_file, scripted_backends, monkeypatch):
+    # Spec: a stage failing must not lose the others' results. The frames that
+    # show the ID card were decoded; only the audio is lost.
+    from selfaudit import pipeline
+    from selfaudit.perceive.video import MediaError
+
+    def broken_audio(data):
+        raise MediaError("bad audio")
+
+    monkeypatch.setattr(pipeline, "extract_audio", broken_audio)
+    state = run_audit(build_persona(ONE_VIDEO_SHOWING_AN_ID(mp4_file), tmp_path), None, scripted_backends)
+    assert any(f.category == "ID_DOCUMENT" for f in state.findings)
+    assert [s.reason for s in state.couldnt_check] == ["unreadable_audio"]
+
+
+def test_a_video_with_no_frames_is_listed(tmp_path, mp4_file, scripted_backends, monkeypatch):
+    # keyframes can return [] without raising; the video must not vanish silently.
+    from selfaudit import pipeline
+    monkeypatch.setattr(pipeline, "keyframes", lambda data, **k: [])
+    state = run_audit(build_persona(ONE_VIDEO_SHOWING_AN_ID(mp4_file), tmp_path), None, scripted_backends)
+    assert "unreadable_video" in [s.reason for s in state.couldnt_check]
+
+
 def test_a_broken_video_is_one_couldnt_check_line(tmp_path, jpg, scripted_backends):
     bad = tmp_path / "bad.mp4"
     bad.write_bytes(b"not a video at all")

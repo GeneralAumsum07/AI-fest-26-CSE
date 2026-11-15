@@ -83,14 +83,24 @@ def analyse_items(
     for r in raws:
         if r.reader == "vision" and r.extracted_text:
             transcribed[r.item_id] = transcribed.get(r.item_id, "") + "\n" + r.extracted_text
+    # A carousel's images all carry the post's caption. The caption's own text
+    # is checked on the post's first item only, or "Amma" would be flagged once
+    # per image; later items are checked on what was transcribed from them.
+    firsts: set[str] = set()
+    posts_seen: set[str] = set()
     for it in items:
+        if it.post_id not in posts_seen:
+            posts_seen.add(it.post_id)
+            firsts.add(it.item_id)
+    for it in items:
+        caption = it.caption if it.item_id in firsts else ""
         if "patterns" in use and backends.analyzer is not None:
             try:
-                raws += recognise(it.item_id, it.caption + transcribed.get(it.item_id, ""), backends.analyzer)
+                raws += recognise(it.item_id, caption + transcribed.get(it.item_id, ""), backends.analyzer)
             except Exception:
                 skipped.append(Skipped(ref=it.item_id, reason="pattern_error"))
         if "lexicon" in use:
-            raws += lexicon(it.item_id, it.caption)
+            raws += lexicon(it.item_id, caption)
 
     captions = {it.item_id: it.caption for it in items}
     post_of = {it.item_id: it.post_id for it in items}

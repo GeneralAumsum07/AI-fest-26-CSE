@@ -18,6 +18,7 @@ const CATEGORY = {
 const REASON = {
   missing_file: "the file was not in the export", outside_export: "it pointed outside the export",
   over_limit: "over the reading limit", unreadable_video: "the video could not be read",
+  unreadable_audio: "the video's sound could not be read",
   unreadable: "the file could not be read", unsupported_type: "a file type I can't read",
   model_error: "the image reader failed on it", model_output: "the image reader's answer made no sense",
   out_of_memory: "the laptop ran out of memory on it", caption_error: "the caption reader failed on it",

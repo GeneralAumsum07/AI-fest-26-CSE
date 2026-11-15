@@ -25,6 +25,14 @@ def test_vision_runs_for_every_item_before_any_other_model(fake_backends, call_l
     assert [c for c in call_log if c != "ner"] == ["vision", "vision", "caption", "caption", "unload"]
 
 
+def test_a_carousel_caption_is_reported_once(fake_backends):
+    # Every image of a 3-image carousel carries the same caption; the user
+    # must see "Amma" flagged once, not three identical lines.
+    items = [ItemInput(f"a/media-{k}", "a", None, "Happy birthday Amma") for k in range(3)]
+    findings, _ = analyse_items(items, fake_backends, use=("patterns", "lexicon"))
+    assert [f.category for f in findings].count("FAMILY_RELATION") == 1
+
+
 def test_failed_image_still_has_its_caption_read(fake_backends, call_log):
     # Plan step 3: "an image that fails still has its caption read".
     fake_backends.vision = Queue([RuntimeError()], call_log)

@@ -88,17 +88,26 @@ def _items_and_audio(profile: Profile, src, couldnt: list[Skipped]
             if m.kind == "image":
                 items.append(ItemInput(m.item_id, post.post_id, data, post.caption))
                 continue
+            # Frames and audio fail separately (spec: a failing stage must not
+            # lose the others' results): a bad audio track keeps the frames.
             try:
                 frames = keyframes(data)
-                # Stories expire, so their speech is not a current voice
-                # exposure (spec 7.4); their frames are still read for past exposure.
-                if post.source != "story":
+            except MediaError:
+                frames = []
+            if not frames:
+                # Also covers keyframes returning [] without raising, so the
+                # video is listed rather than silently missing from the report.
+                couldnt.append(Skipped(ref=m.item_id, reason="unreadable_video"))
+            # Stories expire, so their speech is not a current voice
+            # exposure (spec 7.4); their frames are still read for past exposure.
+            if post.source != "story":
+                try:
                     wav = extract_audio(data)
                     if len(wav):
                         audio.setdefault(post.post_id, []).append(wav)
-            except MediaError:
-                couldnt.append(Skipped(ref=m.item_id, reason="unreadable_video"))
-                continue
+                except MediaError:
+                    if frames:   # an unreadable video is already one line, not two
+                        couldnt.append(Skipped(ref=m.item_id, reason="unreadable_audio"))
             for n, jpeg in enumerate(frames):
                 # The caption travels with the first frame only, so the rules
                 # layer does not report one caption eight times.

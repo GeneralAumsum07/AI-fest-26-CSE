@@ -109,9 +109,10 @@ def test_forget_during_a_run_still_removes_the_upload(scripted_backends, high_zi
 
     held = dataclasses.replace(scripted_backends, vision=HeldVision())
     with TestClient(create_app(lambda: held)) as c:
+        before = set(app_mod._TEMP_DIRS)   # other tests' uploads share this set
         id_ = c.post("/api/audits", files={"export": high_zip}).json()["id"]
         assert reading.wait(30)
-        folder = next(d for d in app_mod._TEMP_DIRS if (d / "export.zip").exists())
+        folder, = set(app_mod._TEMP_DIRS) - before
         assert c.delete(f"/api/audits/{id_}").status_code == 204
         gate.set()
         end = time.monotonic() + 30
