@@ -70,3 +70,16 @@ def test_a_throwback_is_not_away_now(caption):
 
 def test_a_current_trip_is_still_away():
     assert [f.category for f in lexicon("p/media-0", "Goa trip day 1, back next Sunday")] == ["AWAY_STATUS"]
+
+
+@pytest.mark.parametrize("caption", ["on the train to Chennai, no network till tomorrow",
+                                     "on my flight to Delhi", "on a bus to Hampi"])
+def test_being_on_the_way_somewhere_is_away(caption):
+    # dev-011: neither the caption model nor the word list caught a train
+    # journey. A vehicle headed to a place says the writer is travelling now.
+    assert [f.category for f in lexicon("p/media-0", caption)] == ["AWAY_STATUS"]
+
+
+@pytest.mark.parametrize("caption", ["heading to class", "on the way to college", "trained my dog today"])
+def test_a_commute_is_not_away(caption):
+    assert [f.category for f in lexicon("p/media-0", caption)] == []

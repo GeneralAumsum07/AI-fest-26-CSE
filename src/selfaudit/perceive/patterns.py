@@ -119,6 +119,9 @@ _AWAY_LATIN = [
     r"off to", r"travel+ing", r"vacation", r"holiday", r"trip", r"airport", r"boarding",
     r"flying (?:to|out)", r"see you next week", r"back next week", r"out of town",
     r"till (?:mon|tues|wednes|thurs|fri|satur|sun)day", r"until (?:mon|tues|wednes|thurs|fri|satur|sun)day",
+    # In transit right now (dev-011, "on the train to Chennai"). A named vehicle
+    # is required: "on the way to college" is a commute, not being away.
+    r"on (?:the|a|my) (?:train|flight|plane|bus|ferry|cab) to",
 ]
 _AWAY_OTHER = ["✈", "छुट्टी", "यात्रा", "सफर", "ప్రయాణం", "సెలవు"]
 
