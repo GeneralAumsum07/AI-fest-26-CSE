@@ -97,3 +97,16 @@ def test_fixed_reader_phrases_are_kept():
 def test_value_never_reaches_json():
     f, = G([R("patterns", "CONTACT", value="98765 43210")], caption="call 98765 43210")
     assert f.value == "98765 43210" and "98765" not in f.model_dump_json()
+
+
+def test_a_short_public_number_is_not_your_contact():
+    # dev-031: "women's helpline 181, save it". The caption reader called 181
+    # a contact. No personal phone has fewer than 10 digits; 100, 112, 181 and
+    # 1098 are public short codes, and knowing them tells a scammer nothing.
+    f, = G([R("caption", "CONTACT", value="181")], caption="women's helpline 181, save it")
+    assert f.confidence == "unsure"
+
+
+def test_an_email_or_address_from_the_caption_still_counts():
+    f, = G([R("caption", "CONTACT", value="asha@example.com")], caption="mail me at asha@example.com")
+    assert f.confidence == "likely"

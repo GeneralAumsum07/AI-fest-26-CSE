@@ -47,6 +47,20 @@ def _grounded(value: str | None, text: str) -> bool:
 _LONG_NUMBER = re.compile(r"\d(?:[\s-]?\d){9,}")
 
 
+def _public_short_number(value: str | None) -> bool:
+    """A bare number too short to be anyone's own phone (rule 8).
+
+    Debugged 2026-11-15 (dev-031): the caption reader called "181", the
+    women's helpline, a contact. 100, 112, 181, 1098 are public short codes;
+    a scammer learns nothing about you from them. An email or an address
+    has letters in it and is never caught here.
+    """
+    v = (value or "").strip()
+    if not v or not re.fullmatch(r"[\d\s+()-]+", v):
+        return False
+    return sum(ch.isdigit() for ch in v) < 10
+
+
 def _contradicted_contact(rs: list[RawFinding], checked: bool) -> bool:
     """Rule 7: the phone checker read the number vision called a phone, and refused it.
 
@@ -102,6 +116,8 @@ def ground(raws: list[RawFinding], captions: dict[str, str], post_of: dict[str, 
                 continue
             if r.reader in _VALUE_READERS and not ok:
                 continue
+            if category == "CONTACT" and _public_short_number(r.value):
+                continue  # rule 8: a helpline is not your contact
             supports.add(r.reader)
         if category == "CONTACT" and _contradicted_contact(rs, item_id in checked):
             supports.discard("vision")  # rule 7: two readers disagree -> unsure

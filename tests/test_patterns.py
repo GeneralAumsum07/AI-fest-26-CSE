@@ -48,3 +48,25 @@ def test_word_lists_read_hindi_and_telugu():
 def test_word_lists_do_not_fire_inside_other_words():
     # "anna" inside "Hannah", "mom" inside "moment": whole-word matching only.
     assert lexicon("i", "Hannah captured the moment") == []
+
+
+@pytest.mark.parametrize("caption", ["Father's Day offers on every watch", "Happy Mothers Day sale",
+                                     "mother's day brunch menu"])
+def test_a_holiday_name_is_not_a_family_member(caption):
+    # dev-032: "father" inside "Father's Day" names a holiday, not a relative.
+    assert [f.category for f in lexicon("p/media-0", caption)] == []
+
+
+def test_a_real_parent_on_fathers_day_is_still_family():
+    assert [f.category for f in lexicon("p/media-0", "Happy Father's Day papa!")] == ["FAMILY_RELATION"]
+
+
+@pytest.mark.parametrize("caption", ["throwback to the Ooty trip in 2021", "#tbt goa trip", "flashback: airport chaos"])
+def test_a_throwback_is_not_away_now(caption):
+    # dev-030. Spec 314: AWAY_STATUS is travel that is recent. A throwback
+    # announces the trip is over.
+    assert [f.category for f in lexicon("p/media-0", caption)] == []
+
+
+def test_a_current_trip_is_still_away():
+    assert [f.category for f in lexicon("p/media-0", "Goa trip day 1, back next Sunday")] == ["AWAY_STATUS"]

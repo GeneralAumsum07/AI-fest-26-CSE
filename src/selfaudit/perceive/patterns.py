@@ -123,6 +123,15 @@ _AWAY_LATIN = [
 _AWAY_OTHER = ["✈", "छुट्टी", "यात्रा", "सफर", "ప్రయాణం", "సెలవు"]
 
 
+# Phrases removed from a caption before the family list sees it. "Father's
+# Day offers" (dev-032) names a holiday, not a relative; a caption that also
+# says "papa" is still caught by "papa".
+_NOT_FAMILY = re.compile(r"\b(?:father|mother|grandparents?)'?s?\s+day\b", re.IGNORECASE)
+# A caption that says the trip is in the past. Spec 314 asks for travel that
+# is recent; "throwback to the Ooty trip in 2021" (dev-030) says it is over.
+_PAST_TRIP = re.compile(r"(?<![\w])(?:throwback|tbt|flashback|missing (?:this|that) trip)(?![\w])", re.IGNORECASE)
+
+
 @lru_cache(maxsize=None)
 def _latin(words: tuple[str, ...]) -> re.Pattern:
     return re.compile(r"(?<![\w])(?:" + "|".join(words) + r")(?![\w])", re.IGNORECASE)
@@ -142,11 +151,11 @@ def lexicon(item_id: str, caption: str) -> list[RawFinding]:
     model saying "mentions their mother" plus the word "Amma" is confirmed.
     """
     out: list[RawFinding] = []
-    word = _hit(caption, _FAMILY_LATIN, _FAMILY_OTHER)
+    word = _hit(_NOT_FAMILY.sub(" ", caption), _FAMILY_LATIN, _FAMILY_OTHER)
     if word:
         out.append(RawFinding(item_id=item_id, category="FAMILY_RELATION",
                               what="a family word in the caption", extracted_text=word, reader="lexicon"))
-    word = _hit(caption, _AWAY_LATIN, _AWAY_OTHER)
+    word = None if _PAST_TRIP.search(caption) else _hit(caption, _AWAY_LATIN, _AWAY_OTHER)
     if word:
         out.append(RawFinding(item_id=item_id, category="AWAY_STATUS",
                               what="a travel or away phrase in the caption", extracted_text=word, reader="lexicon"))
