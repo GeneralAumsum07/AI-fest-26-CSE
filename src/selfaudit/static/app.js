@@ -29,11 +29,25 @@ function show(view) {
   for (const v of document.querySelectorAll(".view")) v.hidden = v.id !== view;
 }
 
-// "post-0007" -> "Post 7". Names a post the way the user can find it, without
-// quoting its caption (captions can hold the very details being flagged).
+// The server's labels count from the newest post ("post 1" = newest), the same
+// numbering the fix text uses. Never the caption: captions can hold the very
+// details being flagged.
+let labels = {};
 function postName(id) {
-  const m = /^(post|story|reel)-0*(\d+)/.exec(id || "");
-  return m ? `${m[1][0].toUpperCase()}${m[1].slice(1)} ${m[2]}` : id;
+  const label = labels[id] || id;
+  return label.charAt(0).toUpperCase() + label.slice(1);
+}
+
+// The posts behind one recipe: findings in its categories, plus the reels that
+// carry the user's voice. (look_at is not this: it lists the unsure finding
+// ids behind a "Not sure" recipe.)
+function recipePosts(rec, r) {
+  const cats = new Set([...rec.has, ...rec.amplifiers]);
+  const findings = r.findings.filter((f) => cats.has(f.category));
+  const unsure = r.unsure.filter((f) => (rec.look_at || []).includes(f.finding_id));
+  const posts = [...findings, ...unsure].map((f) => f.post_id);
+  if (cats.has("VOICE")) posts.push(...Object.keys(r.voice.seconds_by_post));
+  return { findings: [...findings, ...unsure], posts: [...new Set(posts)] };
 }
 
 function el(tag, attrs = {}, ...kids) {
@@ -72,6 +86,7 @@ function findingLine(f) {
 
 function render(body) {
   const r = body.report, t = body.text;
+  labels = body.post_labels || {};
   const nCouldnt = r.couldnt_check.length;
   $("counts").textContent = `${r.posts_read} posts read · ${nCouldnt} couldn't be checked`;
   $("summary").textContent = t.summary;
@@ -87,8 +102,7 @@ function render(body) {
     if (!rec.level && !rec.not_sure) continue;
     const words = t.recipes[rec.recipe_id] || { title: rec.recipe_id, reasons: "", advice: "" };
     const lvl = rec.not_sure ? ["unsure", "NOT SURE"] : [rec.level, LEVEL[rec.level]];
-    const looked = rec.look_at || [];
-    const findings = r.findings.filter((f) => looked.includes(f.post_id) && rec.has.includes(f.category));
+    const { findings, posts: looked } = recipePosts(rec, r);
     const btn = el("button", { class: "link", type: "button" },
       looked.length === 1 ? "See the post" : `See the ${looked.length} posts`);
     btn.addEventListener("click", () => toggleThumbs(btn, looked));

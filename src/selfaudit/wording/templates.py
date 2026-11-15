@@ -69,7 +69,9 @@ def render_local(payload: WordingPayload) -> ReportText:
         effects = []
         for e in f.effects:
             kind, rid = e.split(" ")
-            effects.append(("ends" if kind == "ends" else "lowers") + ": " + TITLES[rid].lower())
+            # Lower only the first letter: .lower() turned "ID" into "id".
+            title = TITLES[rid][0].lower() + TITLES[rid][1:]
+            effects.append(("ends" if kind == "ends" else "lowers") + ": " + title)
         fixes.append(f"{f.rank}. {_VERB[f.action]} {f.post_ref}" + (f" ({'; '.join(effects)})" if effects else "") + ".")
 
     shown = [r for r in payload.recipes if r.level != "none"]

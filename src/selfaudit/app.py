@@ -27,7 +27,7 @@ from selfaudit.models import Category, Report
 from selfaudit.perceive.video import MediaError, extract_audio, keyframes
 from selfaudit.pipeline import AllBackends, AuditState, mark_missed, mark_wrong, run_audit
 from selfaudit.wording.cloud import word_report
-from selfaudit.wording.payload import build_payload
+from selfaudit.wording.payload import build_payload, post_ordinals
 from selfaudit.wording.templates import voice_note
 
 # Loopback only, and deliberately not configurable: there is no flag that
@@ -103,8 +103,11 @@ def create_app(make_backends: Callable[[], AllBackends], call_llm: Callable[[str
         text, sent = word_report(payload, state.secrets(), call_llm=call_llm)
         # model_dump honours Finding.value's exclude=True: extracted numbers
         # and names are never served, even to the page on this laptop.
+        # The page labels posts exactly as the fix text does ("post 8"), so the
+        # same post never carries two different numbers on one screen.
+        labels = {pid: f"post {n}" for pid, n in post_ordinals(state.profile).items()}
         return {"report": report.model_dump(mode="json"), "text": text.model_dump(), "sent_to_cloud": sent,
-                "voice_note": voice_note(report.voice)}
+                "voice_note": voice_note(report.voice), "post_labels": labels}
 
     def start(export_path: Path, folder: Path, enrol) -> str:
         id_ = uuid.uuid4().hex

@@ -73,6 +73,15 @@ def _token(category: str, band: str, *, with_band: bool) -> str | None:
     return _TOKEN.get(category)
 
 
+def post_ordinals(profile: Profile) -> dict[str, int]:
+    """post_id -> its position counting from the newest post (1 = newest).
+
+    The one numbering the user sees everywhere: the fix text ("post 8") and the
+    page's labels must agree, and newest-first matches scrolling the grid.
+    """
+    return {p.post_id: n for n, p in enumerate(profile.posts, start=1)}
+
+
 def build_payload(report: Report, profile: Profile, language: str = "en") -> WordingPayload:
     band = report.voice.band
     recipes = []
@@ -87,7 +96,7 @@ def build_payload(report: Report, profile: Profile, language: str = "en") -> Wor
         recipes.append(RecipePayload(id=r.recipe_id, level=r.level or "none", not_sure=r.not_sure,
                                      has=list(dict.fromkeys(has)), missing=list(dict.fromkeys(missing))))
 
-    order = {p.post_id: n for n, p in enumerate(profile.posts, start=1)}
+    order = post_ordinals(profile)
     fixes = []
     for rank, f in enumerate(report.fixes, start=1):
         ords = sorted(order[p] for p in f.post_ids if p in order)

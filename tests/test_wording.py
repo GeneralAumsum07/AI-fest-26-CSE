@@ -73,6 +73,7 @@ def test_template_wording_rules(high_state, empty_state):
     assert text.recipes["R2"].title == "A copy of your profile"
     everything = " ".join([text.summary, *text.fixes, *(t.reasons + t.advice for t in text.recipes.values())])
     assert not re.search(r"\bsafe\b", everything, re.I) and not re.search(r"\d+\s*%", everything)
+    assert any("misuse of your ID document" in f for f in text.fixes)    # "ID" keeps its capitals
     empty = render_local(build_payload(empty_state.report(), empty_state.profile))
     assert empty.summary.startswith("I found nothing urgent in what I could read")
 

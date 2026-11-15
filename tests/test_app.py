@@ -88,6 +88,14 @@ def test_report_is_409_until_finished(scripted_backends, high_zip):
         assert c.get(f"/api/audits/{id_}/report").status_code == 200
 
 
+def test_page_labels_match_the_fix_text(client, finished_id):
+    # The fix text says "post 8"; the thumbnail for that post must say "post 8" too.
+    body = client.get(f"/api/audits/{finished_id}/report").json()
+    first = body["report"]["fixes"][0]
+    assert len(first["post_ids"]) == 1
+    assert body["post_labels"][first["post_ids"][0]] in body["text"]["fixes"][0]
+
+
 def test_feedback_changes_the_report(client, finished_id):
     report = client.get(f"/api/audits/{finished_id}/report").json()["report"]
     fid = next(f["finding_id"] for f in report["findings"] if f["category"] == "ID_DOCUMENT")
