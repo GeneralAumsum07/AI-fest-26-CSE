@@ -14,7 +14,7 @@ About five minutes. Everything shown is synthetic. Say out loud which beats are 
 3. **Pre-compute the large persona** in browser tab 1 and leave it on its report:
 
    ```bash
-   uv run python -m selfaudit --export data/personas/high.zip --enrol data/personas/enrol.wav
+   uv run --offline python -m selfaudit --export data/personas/high.zip --enrol data/personas/enrol.wav
    ```
 
 4. Pre-compute the fixed persona in tab 2 (same command, `data/personas/fixed.zip`). The server holds both runs in memory; do not press "Forget this run".
@@ -36,7 +36,7 @@ About five minutes. Everything shown is synthetic. Say out loud which beats are 
 Beat 4 command, typed live:
 
 ```bash
-uv run python -m selfaudit --export data/personas/careful.zip
+uv run --offline python -m selfaudit --export data/personas/careful.zip
 ```
 
 ## If something breaks
