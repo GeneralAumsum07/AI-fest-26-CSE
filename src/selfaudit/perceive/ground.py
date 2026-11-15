@@ -11,6 +11,7 @@ Two ideas carry it:
 
 from __future__ import annotations
 
+import re
 from collections import defaultdict
 
 from selfaudit.ingest.textfix import normalise
@@ -39,8 +40,39 @@ def _grounded(value: str | None, text: str) -> bool:
     return bool(nv) and nv in text
 
 
-def ground(raws: list[RawFinding], captions: dict[str, str], post_of: dict[str, str]) -> list[Finding]:
-    """One Finding per (item_id, category), in first-seen order."""
+# A run of at least 10 digits, allowing the spaces and dashes people group
+# numbers with. Ten is the length of an Indian mobile number, so any phone the
+# model could have meant is at least this long; a house number or a PIN code
+# (6 digits) is not, which keeps written addresses out of rule 7.
+_LONG_NUMBER = re.compile(r"\d(?:[\s-]?\d){9,}")
+
+
+def _contradicted_contact(rs: list[RawFinding], checked: bool) -> bool:
+    """Rule 7: the phone checker read the number vision called a phone, and refused it.
+
+    Debugged 2026-11-15: the vision model called a meme's 12-digit number and
+    an order number "a phone number". Alone that was one support, "likely",
+    and it filled a recipe slot. But the India-only phone recogniser had read
+    the same transcribed digits and found no phone. Spec 264: disagreement
+    lowers confidence rather than raising an alarm. Only a long digit run
+    counts as a contradiction, because no recogniser here knows addresses;
+    its silence on "12 MG Road" says nothing.
+    """
+    if not checked or any(r.reader != "vision" for r in rs):
+        return False
+    return any(_LONG_NUMBER.search(r.extracted_text or "") for r in rs)
+
+
+def ground(raws: list[RawFinding], captions: dict[str, str], post_of: dict[str, str],
+           checked: set[str] | None = None) -> list[Finding]:
+    """One Finding per (item_id, category), in first-seen order.
+
+    `checked` is the set of item_ids whose text the pattern recognisers read
+    without error. It is passed in, not inferred, because the ablation runs
+    without patterns, and "the checker found nothing" must not be confused
+    with "the checker never looked".
+    """
+    checked = checked or set()
     # Item text = caption + everything the vision model transcribed from the image.
     text: dict[str, str] = defaultdict(str)
     for item_id, cap in captions.items():
@@ -71,6 +103,8 @@ def ground(raws: list[RawFinding], captions: dict[str, str], post_of: dict[str, 
             if r.reader in _VALUE_READERS and not ok:
                 continue
             supports.add(r.reader)
+        if category == "CONTACT" and _contradicted_contact(rs, item_id in checked):
+            supports.discard("vision")  # rule 7: two readers disagree -> unsure
         # Rule 6: prefer the checksum-backed value, then the caption's.
         for reader in ("patterns", "caption"):
             v = next((r.value for r in rs if r.reader == reader and _grounded(r.value, text[item_id])), None)

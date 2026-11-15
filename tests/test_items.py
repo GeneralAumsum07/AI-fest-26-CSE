@@ -38,3 +38,26 @@ def test_failed_image_still_has_its_caption_read(fake_backends, call_log):
     fake_backends.vision = Queue([RuntimeError()], call_log)
     analyse_items([ItemInput("a/media-0", "a", b"x", "hi")], fake_backends)
     assert fake_backends.captions.calls == 1
+
+
+def test_vision_contact_the_phone_checker_rejected_is_unsure(fake_backends, analyzer):
+    # The runner must tell grounding which items the phone checker actually
+    # read; that is what lets rule 7 tell "checked, no phone" from "never
+    # checked". The meme from the careful persona, end to end.
+    fake_backends.analyzer = analyzer
+    fake_backends.vision = Queue([VisionOutput(findings=[F(extracted_text="3947 6152 3589")])])
+    findings, _ = analyse_items([ItemInput("a/media-0", "a", b"x", "lol")], fake_backends,
+                                use=("vision", "patterns"))
+    assert [(f.category, f.confidence) for f in findings] == [("CONTACT", "unsure")]
+
+
+def test_a_pattern_error_does_not_count_as_checked(fake_backends):
+    # If the checker crashed it said nothing, so it contradicts nothing.
+    class Broken:
+        def analyze(self, *a, **k):
+            raise RuntimeError
+    fake_backends.analyzer = Broken()
+    fake_backends.vision = Queue([VisionOutput(findings=[F(extracted_text="3947 6152 3589")])])
+    findings, _ = analyse_items([ItemInput("a/media-0", "a", b"x", "lol")], fake_backends,
+                                use=("vision", "patterns"))
+    assert [(f.category, f.confidence) for f in findings] == [("CONTACT", "likely")]

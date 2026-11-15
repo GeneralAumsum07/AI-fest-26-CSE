@@ -34,6 +34,38 @@ def test_caption_plus_word_list_is_confirmed():
     assert f.confidence == "confirmed"
 
 
+def _contact(text, checked):
+    return ground([R("vision", "CONTACT", extracted_text=text, model_confidence="high")],
+                  {"p/media-0": ""}, {"p/media-0": "p"}, checked=checked)[0]
+
+
+def test_a_number_the_phone_checker_rejected_is_not_contact():
+    # Debugged 2026-11-15: qwen3.5:4b called a meme's "3947 6152 3589" (fails
+    # the Aadhaar checksum, not an Indian phone shape) a phone number, and
+    # the vision claim alone made it "likely". When the India-only phone
+    # recogniser read the same digits and found no phone, the two readers
+    # disagree, and spec 264 says disagreement lowers confidence.
+    assert _contact("3947 6152 3589", checked={"p/media-0"}).confidence == "unsure"
+
+
+def test_without_the_phone_checker_vision_alone_stays_likely():
+    # The vision-only ablation (B1) runs no patterns: nothing contradicted it.
+    assert _contact("3947 6152 3589", checked=set()).confidence == "likely"
+
+
+def test_a_written_address_is_not_downgraded():
+    # No recogniser here knows Indian addresses, so silence from it is not a
+    # contradiction; only a long digit run it rejected is.
+    assert _contact("12 MG Road, Indiranagar, Bengaluru 560038", checked={"p/media-0"}).confidence == "likely"
+
+
+def test_a_real_phone_is_still_confirmed():
+    f, = ground([R("vision", "CONTACT", extracted_text="call 90000 47118"),
+                 R("patterns", "CONTACT", value="90000 47118")],
+                {"p/media-0": ""}, {"p/media-0": "p"}, checked={"p/media-0"})
+    assert f.confidence == "confirmed"
+
+
 def test_college_id_counts_as_institution_not_id():
     assert [f.category for f in G([R("vision", "ID_DOCUMENT", id_subtype="institutional")])] == ["INSTITUTION"]
 

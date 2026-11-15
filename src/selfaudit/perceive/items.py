@@ -92,11 +92,15 @@ def analyse_items(
         if it.post_id not in posts_seen:
             posts_seen.add(it.post_id)
             firsts.add(it.item_id)
+    # Items whose text the recognisers actually read. Grounding rule 7 needs
+    # it: "the phone checker found no phone" only means something if it ran.
+    checked: set[str] = set()
     for it in items:
         caption = it.caption if it.item_id in firsts else ""
         if "patterns" in use and backends.analyzer is not None:
             try:
                 raws += recognise(it.item_id, caption + transcribed.get(it.item_id, ""), backends.analyzer)
+                checked.add(it.item_id)
             except Exception:
                 skipped.append(Skipped(ref=it.item_id, reason="pattern_error"))
         if "lexicon" in use:
@@ -104,4 +108,4 @@ def analyse_items(
 
     captions = {it.item_id: it.caption for it in items}
     post_of = {it.item_id: it.post_id for it in items}
-    return ground(raws, captions, post_of), skipped
+    return ground(raws, captions, post_of, checked=checked), skipped
