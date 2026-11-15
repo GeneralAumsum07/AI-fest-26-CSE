@@ -61,6 +61,29 @@ def _public_short_number(value: str | None) -> bool:
     return sum(ch.isdigit() for ch in v) < 10
 
 
+# Words that say a name belongs to a college, school or employer. Rule 9 asks
+# vision's transcription for one of them before its INSTITUTION claim counts.
+_INSTITUTION_WORD = re.compile(
+    r"\b(?:college|universit(?:y|ies)|institute|school|academy|polytechnic|campus|faculty|"
+    r"iit|nit|iiit|student|employee|staff|ltd|limited|pvt|private|inc|llp|corp|corporation|"
+    r"company|technologies|solutions|services|labs?|hospital)\b", re.IGNORECASE)
+
+
+def _bare_name_institution(rs: list[RawFinding]) -> bool:
+    """Rule 9: vision named a place but nothing says it is a college or employer.
+
+    Debugged 2026-11-15 (dev-023): on a restaurant bill the model transcribed
+    only "Spice Garden" and called it an institution. A shop, restaurant or
+    brand is just a name; the spec's INSTITUTION is the person's college,
+    school or employer. When vision is the only reader and its text carries no
+    word for one, its claim is not support. Cost: an employer shown only by a
+    bare brand ("Infosys" on a lanyard) becomes "Not sure" (still shown); the
+    caption model, which reads "first day at Infosys" in context, is exempt.
+    """
+    vision = [r for r in rs if r.reader == "vision"]
+    return bool(vision) and not any(_INSTITUTION_WORD.search(r.extracted_text or "") for r in vision)
+
+
 def _contradicted_contact(rs: list[RawFinding], checked: bool) -> bool:
     """Rule 7: the phone checker read the number vision called a phone, and refused it.
 
@@ -121,6 +144,8 @@ def ground(raws: list[RawFinding], captions: dict[str, str], post_of: dict[str, 
             supports.add(r.reader)
         if category == "CONTACT" and _contradicted_contact(rs, item_id in checked):
             supports.discard("vision")  # rule 7: two readers disagree -> unsure
+        if category == "INSTITUTION" and _bare_name_institution(rs):
+            supports.discard("vision")  # rule 9: a bare name is not a college or employer
         # Rule 6: prefer the checksum-backed value, then the caption's.
         for reader in ("patterns", "caption"):
             v = next((r.value for r in rs if r.reader == reader and _grounded(r.value, text[item_id])), None)

@@ -110,3 +110,27 @@ def test_a_short_public_number_is_not_your_contact():
 def test_an_email_or_address_from_the_caption_still_counts():
     f, = G([R("caption", "CONTACT", value="asha@example.com")], caption="mail me at asha@example.com")
     assert f.confidence == "likely"
+
+
+def _inst(text, reader="vision", **k):
+    return G([R(reader, "INSTITUTION", extracted_text=text, model_confidence="high", **k)])[0]
+
+
+def test_a_bare_shop_name_is_not_an_institution():
+    # dev-023: a restaurant bill. The model transcribed only "Spice Garden"
+    # and called it an institution. Nothing in the text says it is a college
+    # or an employer, so one model's word is not enough.
+    assert _inst("Spice Garden").confidence == "unsure"
+
+
+@pytest.mark.parametrize("text", ["GODAVARI VALE COLLEGE OF ENGINEERING", "Mock Institute of Technology",
+                                  "Acme Technologies Pvt Ltd - Employee ID", "Delhi Public School"])
+def test_a_named_college_school_or_employer_still_counts(text):
+    assert _inst(text).confidence == "likely"
+
+
+def test_the_caption_reader_is_not_held_to_the_word_list():
+    # The rule is about vision's bare transcriptions; a caption saying "my
+    # first day at Infosys" is read in context by the caption model.
+    f, = G([R("caption", "INSTITUTION", value="Infosys")], caption="first day at Infosys!")
+    assert f.confidence == "likely"
