@@ -49,6 +49,9 @@ def check_vision(image: Path) -> bool:
             # Temperature 0: the same photo should give the same reading, which
             # is what makes the development-split metrics reproducible.
             options={"temperature": 0},
+            # Same think setting as the real reader, so this check times and
+            # parses the model the way the audit will actually call it.
+            **({} if config.VISION_THINK is None else {"think": config.VISION_THINK}),
         )
         parsed = json.loads(reply.message.content)
         ok = isinstance(parsed.get("has_person"), bool) and isinstance(parsed.get("what"), str)
