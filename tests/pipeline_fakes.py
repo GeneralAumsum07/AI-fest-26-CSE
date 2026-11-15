@@ -51,9 +51,12 @@ class ScriptedCaptions:
     def read(self, caption):
         out = []
         if "Amma" in caption:
-            out.append(CaptionFinding(category="FAMILY_RELATION", what="names a parent", value="Amma"))
+            # Real models echo what they found into their sentence; the fakes do
+            # too, so the tests prove that sentence is never served.
+            out.append(CaptionFinding(category="FAMILY_RELATION", what="names a parent, Amma", value="Amma"))
         if "Mahindra University" in caption:
-            out.append(CaptionFinding(category="INSTITUTION", what="names a university", value="Mahindra University"))
+            out.append(CaptionFinding(category="INSTITUTION", what="studies at Mahindra University",
+                                      value="Mahindra University"))
         return out
 
 

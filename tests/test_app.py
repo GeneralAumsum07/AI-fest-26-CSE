@@ -96,6 +96,15 @@ def test_page_labels_match_the_fix_text(client, finished_id):
     assert body["post_labels"][first["post_ids"][0]] in body["text"]["fixes"][0]
 
 
+def test_nothing_extracted_is_served(client, finished_id):
+    # The fakes' readers extract an Aadhaar number, a parent's name and a
+    # university; none of them may appear anywhere the API serves.
+    from pipeline_fakes import AADHAAR
+    served = client.get(f"/api/audits/{finished_id}/report").text
+    for secret in (AADHAAR.replace(" ", "")[:4], "Amma", "Mahindra"):
+        assert secret not in served
+
+
 def test_feedback_changes_the_report(client, finished_id):
     report = client.get(f"/api/audits/{finished_id}/report").json()["report"]
     fid = next(f["finding_id"] for f in report["findings"] if f["category"] == "ID_DOCUMENT")

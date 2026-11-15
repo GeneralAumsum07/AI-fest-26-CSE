@@ -47,6 +47,21 @@ def test_user_reports_are_confirmed():
     assert G([R("user", "CONTACT")])[0].confidence == "confirmed"
 
 
+@pytest.mark.parametrize("reader", ["vision", "caption", "ner"])
+def test_model_written_text_never_becomes_the_finding_text(reader):
+    # A model's own sentence can carry the very name and number being flagged;
+    # the finding's text must come from a fixed phrase, never from the model.
+    leaky = "Aadhaar card of Priya Sharma, 2345 6789 0123"
+    f, = G([R(reader, "ID_DOCUMENT", what=leaky, value="Priya Sharma")], caption="Priya Sharma 2345 6789 0123")
+    assert "Priya" not in f.what and "2345" not in f.what and f.what
+
+
+def test_fixed_reader_phrases_are_kept():
+    # Pattern and word-list phrases are written by us, so they stay as they are.
+    f, = G([R("patterns", "CONTACT", what="a phone number", value="98765 43210")], caption="call 98765 43210")
+    assert f.what == "a phone number"
+
+
 def test_value_never_reaches_json():
     f, = G([R("patterns", "CONTACT", value="98765 43210")], caption="call 98765 43210")
     assert f.value == "98765 43210" and "98765" not in f.model_dump_json()

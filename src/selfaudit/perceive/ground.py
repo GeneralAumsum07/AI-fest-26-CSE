@@ -19,6 +19,19 @@ from selfaudit.models import Finding, RawFinding
 _FACE_LEVEL = {"high": "confirmed", "medium": "likely", "low": "unsure"}
 # Readers whose support depends on the value they claimed being grounded.
 _VALUE_READERS = {"caption", "ner"}
+# Readers whose `what` is a phrase we wrote (patterns._WHAT, the word lists,
+# "reported by you"). Every other reader is a model, and a model's sentence can
+# hold the very name or number being flagged ("Aadhaar card of Priya, 2345...").
+# Finding.value is excluded from serialisation to keep those values on the
+# laptop; serving the model's sentence as `what` would undo that, so model
+# findings are described by category instead.
+_FIXED_TEXT_READERS = {"patterns", "lexicon", "user"}
+_CATEGORY_WHAT = {
+    "ID_DOCUMENT": "an ID document", "FINANCIAL": "a bank card or account detail",
+    "TRAVEL_DOC": "a ticket or boarding pass", "CONTACT": "a phone number or email",
+    "FAMILY_RELATION": "a family member's name", "AWAY_STATUS": "a sign you are away",
+    "INSTITUTION": "your college or workplace", "FACE_CLEAR": "a clear face", "VOICE": "your voice",
+}
 
 
 def _grounded(value: str | None, text: str) -> bool:
@@ -77,10 +90,11 @@ def ground(raws: list[RawFinding], captions: dict[str, str], post_of: dict[str, 
         else:
             confidence = "unsure"
 
-        first = rs[0]
+        # Prefer our own phrase when a fixed-text reader saw it; else the category's.
+        what = next((r.what for r in rs if r.reader in _FIXED_TEXT_READERS), _CATEGORY_WHAT[category])
         out.append(Finding(
             finding_id=f"{item_id}:{category}", item_id=item_id,
             post_id=post_of.get(item_id, item_id.split("/", 1)[0]), category=category,
-            what=first.what, confidence=confidence, supports=sorted(supports), value=value,
+            what=what, confidence=confidence, supports=sorted(supports), value=value,
         ))
     return out
