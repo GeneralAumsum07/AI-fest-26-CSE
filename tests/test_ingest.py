@@ -42,7 +42,8 @@ def test_never_opens_anything_outside_the_allowlist(tmp_path, jpg):
         src.read_media("messages/inbox/chat.json")
 
 
-@pytest.mark.parametrize("uri", ["../outside.jpg", "/etc/passwd", "C:/Windows/win.ini", "messages/inbox/p.jpg"])
+@pytest.mark.parametrize("uri", ["../outside.jpg", "/etc/passwd", "C:/Windows/win.ini", "messages/inbox/p.jpg",
+                                 "your_instagram_activity/messages/inbox/a/photos/1.jpg"])
 def test_index_entries_pointing_outside_are_listed_not_opened(tmp_path, jpg, uri):
     spec = SPEC1(jpg)
     spec.posts[0].media.append(uri)
@@ -68,6 +69,28 @@ def test_a_folder_that_is_not_an_export_is_named(tmp_path):
 def test_zip_with_a_wrapper_folder_is_read(tmp_path, jpg):
     z = build_persona(SPEC1(jpg), tmp_path, as_zip=True, wrapper="instagram-asha-2026-11-12")
     assert len(load_profile(z).posts) == 1
+
+
+def test_a_zip_made_on_a_mac_is_read(tmp_path, jpg):
+    # macOS "Compress" adds __MACOSX/ and .DS_Store beside the wrapper folder.
+    # Our own "export came in parts" advice tells users to re-zip, so this
+    # exact ZIP must open.
+    import zipfile
+    z = build_persona(SPEC1(jpg), tmp_path, as_zip=True, wrapper="instagram-asha")
+    with zipfile.ZipFile(z, "a") as zf:
+        zf.writestr("__MACOSX/instagram-asha/._personal_information", b"x")
+        zf.writestr(".DS_Store", b"x")
+    assert len(load_profile(z).posts) == 1
+
+
+def test_the_source_releases_the_zip_when_closed(tmp_path, jpg):
+    # On Windows an open ZipFile locks the file, so "Forget" could not delete
+    # an export a reader still held.
+    z = build_persona(SPEC1(jpg), tmp_path, as_zip=True)
+    with open_export(z) as src:
+        load_profile(z, source=src)
+    z.unlink()
+    assert not z.exists()
 
 
 def test_export_in_parts_is_named_not_half_read(tmp_path, jpg):

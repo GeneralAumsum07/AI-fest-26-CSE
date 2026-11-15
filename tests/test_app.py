@@ -88,6 +88,48 @@ def test_report_is_409_until_finished(scripted_backends, high_zip):
         assert c.get(f"/api/audits/{id_}/report").status_code == 200
 
 
+def test_forget_during_a_run_still_removes_the_upload(scripted_backends, high_zip):
+    # "Forget" can be pressed while the reader still holds the ZIP open. The
+    # upload (ID photos) must still be gone once the run lets go of it.
+    import dataclasses
+    import threading
+    from selfaudit import app as app_mod
+
+    gate, reading = threading.Event(), threading.Event()
+    inner = scripted_backends.vision
+
+    class HeldVision:
+        def describe(self, *a, **k):
+            reading.set()          # the ZIP is open now
+            gate.wait(10)
+            return inner.describe(*a, **k)
+
+        def unload(self):
+            inner.unload()
+
+    held = dataclasses.replace(scripted_backends, vision=HeldVision())
+    with TestClient(create_app(lambda: held)) as c:
+        id_ = c.post("/api/audits", files={"export": high_zip}).json()["id"]
+        assert reading.wait(30)
+        folder = next(d for d in app_mod._TEMP_DIRS if (d / "export.zip").exists())
+        assert c.delete(f"/api/audits/{id_}").status_code == 204
+        gate.set()
+        end = time.monotonic() + 30
+        while folder.exists() and time.monotonic() < end:
+            time.sleep(0.05)
+        assert not folder.exists()
+
+
+def test_startup_sweeps_uploads_a_killed_run_left_behind(tmp_path):
+    # Closing the console window skips atexit; the next start cleans up.
+    from selfaudit.app import sweep_stale_uploads
+    (tmp_path / "selfaudit-old").mkdir()
+    (tmp_path / "selfaudit-old" / "export.zip").write_bytes(b"x")
+    (tmp_path / "someone-else").mkdir()
+    sweep_stale_uploads(tmp_path)
+    assert not (tmp_path / "selfaudit-old").exists() and (tmp_path / "someone-else").exists()
+
+
 def test_page_labels_match_the_fix_text(client, finished_id):
     # The fix text says "post 8"; the thumbnail for that post must say "post 8" too.
     body = client.get(f"/api/audits/{finished_id}/report").json()

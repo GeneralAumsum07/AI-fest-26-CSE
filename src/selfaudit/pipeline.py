@@ -114,11 +114,12 @@ def run_audit(export_path: Path, enrol: np.ndarray | None, backends: AllBackends
               on_progress: Callable[[str, int, int], None] = lambda s, d, t: None,
               max_items: int | None = config.MAX_ITEMS) -> AuditState:
     t0 = time.perf_counter()
-    src = open_export(export_path)
-    profile = load_profile(export_path, max_items=max_items, source=src)
-    couldnt = list(profile.couldnt_check)
-
-    items, clips = _items_and_audio(profile, src, couldnt)
+    # The ZIP is open only while media is read; the slow model passes run with
+    # it closed, so "Forget" can delete the upload as soon as possible.
+    with open_export(export_path) as src:
+        profile = load_profile(export_path, max_items=max_items, source=src)
+        couldnt = list(profile.couldnt_check)
+        items, clips = _items_and_audio(profile, src, couldnt)
     log.info("audit: %d posts, %d items, %d clips", len(profile.posts), len(items), len(clips))
 
     findings, skipped = analyse_items(items, backends, on_progress=on_progress)

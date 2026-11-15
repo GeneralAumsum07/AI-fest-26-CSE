@@ -63,6 +63,9 @@ class ExportSource:
             raw = [n for n in self._zip.namelist() if not n.endswith("/")]
         else:
             raw = [p.relative_to(self.path).as_posix() for p in self.path.rglob("*") if p.is_file()]
+        # macOS "Compress" adds __MACOSX/ and .DS_Store. They are never part of
+        # an export, and left in they hide the wrapper folder from _wrapper.
+        raw = [n for n in raw if not _os_junk(n)]
         self._prefix = self._wrapper(raw)
         self.names = {n[len(self._prefix):] for n in raw if n.startswith(self._prefix)}
 
@@ -105,6 +108,23 @@ class ExportSource:
             raise PermissionError(f"not referenced by an index: {zip_path}")
         return self._read(zip_path)
 
+    def close(self) -> None:
+        # Windows locks an open file: until this runs, "Forget" cannot delete
+        # the uploaded ZIP (which holds the user's ID photos).
+        if self._zip:
+            self._zip.close()
+
+    def __enter__(self) -> "ExportSource":
+        return self
+
+    def __exit__(self, *exc) -> None:
+        self.close()
+
+
+def _os_junk(name: str) -> bool:
+    parts = name.split("/")
+    return parts[0] == "__MACOSX" or parts[-1].startswith(".")
+
 
 def open_export(path: Path) -> ExportSource:
     return ExportSource(path)
@@ -118,7 +138,9 @@ def _outside(uri: str) -> bool:
         u.startswith("/")
         or re.match(r"^[A-Za-z]:", u) is not None
         or ".." in u.split("/")
-        or u.split("/", 1)[0] == "messages"
+        # Messages at any depth: newer exports keep DMs under
+        # your_instagram_activity/messages/, and a DM photo is never ours to open.
+        or "messages" in u.split("/")
     )
 
 

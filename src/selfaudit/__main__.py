@@ -16,7 +16,7 @@ from pathlib import Path
 
 import uvicorn
 
-from selfaudit.app import HOST, PORT, _TEMP_DIRS, create_app
+from selfaudit.app import HOST, PORT, _TEMP_DIRS, create_app, sweep_stale_uploads
 
 
 def real_backends():
@@ -37,6 +37,13 @@ def main() -> None:
                    help="an Instagram export (folder or ZIP) to audit at start; repeat for several")
     p.add_argument("--enrol", type=Path, help="a short recording of your voice, used for every --export")
     args = p.parse_args()
+
+    # Clear uploads a killed earlier run left in %TEMP%, but only when no other
+    # instance is serving: a live one may still be reading its own upload.
+    try:
+        socket.create_connection((HOST, PORT), timeout=0.5).close()
+    except OSError:
+        sweep_stale_uploads()
 
     from selfaudit.wording.cloud import make_call_llm
     app = create_app(real_backends, call_llm=make_call_llm())

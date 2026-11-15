@@ -54,6 +54,19 @@ def _cleanup() -> None:
         shutil.rmtree(d, ignore_errors=True)
 
 
+def sweep_stale_uploads(tmp: Path | None = None) -> None:
+    """Remove upload folders a previous run left behind.
+
+    atexit does not run when the console window is closed or the process is
+    killed, so the next start is the only other chance. Called once before the
+    server starts, when no run of ours can be using these folders; the port is
+    fixed, so a second live instance could not have started anyway.
+    """
+    for d in Path(tmp or tempfile.gettempdir()).glob("selfaudit-*"):
+        if d.is_dir():
+            shutil.rmtree(d, ignore_errors=True)
+
+
 @dataclass
 class Run:
     folder: Path
@@ -64,7 +77,16 @@ class Run:
     finished: bool = False
     error: str | None = None
     state: AuditState | None = None
+    deleted: bool = False          # "Forget" arrived; the worker removes what it could not
     lock: threading.Lock = field(default_factory=threading.Lock)
+
+
+def _remove(folder: Path) -> None:
+    """Delete an upload folder. If Windows still has a file in it open, keep it
+    on the exit-cleanup list rather than forgetting about it."""
+    shutil.rmtree(folder, ignore_errors=True)
+    if not folder.exists():
+        _TEMP_DIRS.discard(folder)
 
 
 class Feedback(BaseModel):
@@ -127,6 +149,10 @@ def create_app(make_backends: Callable[[], AllBackends], call_llm: Callable[[str
                 run.error = GENERIC_ERROR
             finally:
                 run.finished = True
+                if run.deleted:
+                    # Forgotten mid-run: the reader has let go of the ZIP now.
+                    run.state = None
+                    _remove(run.folder)
 
         threading.Thread(target=work, daemon=True).start()
         return id_
@@ -197,9 +223,9 @@ def create_app(make_backends: Callable[[], AllBackends], call_llm: Callable[[str
             # the one path the loaded profile lists for this post, nothing else:
             # the profile was built from the indexes, so this is the same rule
             # the loader applied, not a wider one.
-            src = open_export(run.export)
-            src.allow_media(item.zip_path)
-            data = src.read_media(item.zip_path)
+            with open_export(run.export) as src:
+                src.allow_media(item.zip_path)
+                data = src.read_media(item.zip_path)
             if item.kind == "video":
                 frames = keyframes(data, max_frames=1)
                 if not frames:
@@ -221,8 +247,10 @@ def create_app(make_backends: Callable[[], AllBackends], call_llm: Callable[[str
         run = runs.pop(id_, None)
         if run is None:
             raise HTTPException(404)
-        shutil.rmtree(run.folder, ignore_errors=True)
-        _TEMP_DIRS.discard(run.folder)
+        run.deleted = True
+        # Fails quietly while a running audit holds the ZIP; the worker then
+        # removes the folder itself when it finishes (see work()).
+        _remove(run.folder)
         return Response(status_code=204)
 
     @app.get("/")
