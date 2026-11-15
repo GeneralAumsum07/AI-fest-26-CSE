@@ -21,3 +21,31 @@ VISION_THINK: bool | None = False
 # Presidio's phone recogniser scores 0.4 before context words, so anything
 # higher would drop bare phone numbers (Task 3).
 SCORE_THRESHOLD = 0.4
+
+# Video keyframes (Task 8): one frame every 3 s, at most 8 per video. Eight
+# frames keeps a 60 s reel to the cost of eight photos on the vision model.
+KEYFRAME_EVERY_S = 3.0
+KEYFRAME_MAX = 8
+
+# Voice (Task 9). SIM_THRESHOLD is the cosine score at which a segment counts as
+# the enrolled speaker; 0.25 is believed to be SpeechBrain's verification default
+# (from memory, not checked) and is tuned on half of the audio set.
+SIM_THRESHOLD = 0.25
+# Speaker embeddings from scraps under a second are unreliable, so skip them.
+MIN_SEGMENT_S = 1.0
+# DefaultGate: a segment is "clean" when its speech is at least this many dB
+# above the clip's own non-speech parts (music, crowd, wind). Tuned in Task 9.
+CLEAN_SNR_DB = 15.0
+
+# Cap on media items read per audit (Task 12). None until Task 7's speed
+# measurement says how many images fit in the time a person will wait.
+MAX_ITEMS: int | None = None
+
+# Leak check (Task 13): secrets shorter than this are not searched for, because
+# the payload type has no field that could carry them, and a 3-character
+# search would fire on ordinary tokens.
+MIN_LEAK_LEN = 4
+
+# Recipes (Task 10).
+SEVERAL_FACE_POSTS = 3
+AWAY_WINDOW_DAYS = 7
