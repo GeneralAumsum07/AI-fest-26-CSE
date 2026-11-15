@@ -39,6 +39,24 @@ class VisionOutput(BaseModel):
     unreadable: bool = False
 
 
+def _answer_schema() -> dict:
+    """The JSON schema Ollama constrains the model to.
+
+    Same as VisionOutput's, except extracted_text is required. Constrained
+    decoding lets a model skip any optional field, and qwen3.5:4b did: on a
+    legible mock Aadhaar it named the ID but left extracted_text out, so the
+    number never reached the checksum check and the ID came back "Not sure".
+    Required, it transcribed the whole card (and stopped padding the answer
+    with guessed categories). The Python default stays "" so parsing and the
+    test fakes are unchanged; only what the model must emit changes.
+    """
+    schema = VisionOutput.model_json_schema()
+    required = schema["$defs"]["VisionFinding"]["required"]
+    if "extracted_text" not in required:
+        required.append("extracted_text")
+    return schema
+
+
 class VisionBackend(Protocol):
     def describe(self, image: bytes, caption: str, *, max_side: int = 1280,
                  short_prompt: bool = False) -> VisionOutput: ...
@@ -107,7 +125,7 @@ class OllamaVision:
         try:
             reply = self._chat(
                 messages=[{"role": "user", "content": prompt, "images": [_resize_jpeg(image, max_side)]}],
-                format=VisionOutput.model_json_schema(),
+                format=_answer_schema(),
                 # Temperature 0 so the same image gives the same findings, which
                 # keeps development-split numbers reproducible.
                 options={"temperature": 0, "num_predict": config.MODEL_MAX_TOKENS},

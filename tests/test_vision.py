@@ -64,6 +64,34 @@ def test_model_calls_are_bounded_in_length_and_time(monkeypatch, jpg):
     assert all(c["options"]["num_predict"] == config.MODEL_MAX_TOKENS for c in calls) and len(calls) == 2
 
 
+def test_the_model_must_fill_extracted_text(monkeypatch, jpg):
+    # Ollama's constrained decoding lets a model skip any field the schema
+    # does not require. qwen3.5:4b skipped extracted_text on a legible mock
+    # Aadhaar, so the number never reached the checksum check and the ID was
+    # "Not sure" (debugged 2026-11-15). The schema sent must require it.
+    import ollama
+
+    from selfaudit.perceive.vision import OllamaVision
+
+    calls = []
+
+    class Reply:
+        message = type("M", (), {"content": '{"findings": []}'})()
+
+    class FakeClient:
+        def __init__(self, **kw):
+            pass
+
+        def chat(self, **kw):
+            calls.append(kw)
+            return Reply()
+
+    monkeypatch.setattr(ollama, "Client", FakeClient)
+    OllamaVision().describe(jpg.read_bytes(), "")
+    schema = calls[0]["format"]
+    assert "extracted_text" in schema["$defs"]["VisionFinding"]["required"]
+
+
 def test_schema_rejects_an_invented_category():
     with pytest.raises(ValueError):
         VisionOutput.model_validate_json('{"findings": [{"category": "SSN", "what": "x", "model_confidence": "high"}]}')
