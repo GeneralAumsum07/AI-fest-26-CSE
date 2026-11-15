@@ -1,0 +1,57 @@
+/* Plain, high-contrast, system fonts: no web fonts, because the page must work offline. */
+:root {
+  --bg: #ffffff; --fg: #1b1b1f; --muted: #5d5d66; --line: #dcdce3; --panel: #f6f6f9;
+  --high: #b3261e; --medium: #a35a00; --low: #3c6e3c; --unsure: #5d5d66; --accent: #2a4fb3;
+}
+@media (prefers-color-scheme: dark) {
+  :root { --bg: #16161a; --fg: #ececf1; --muted: #a2a2ad; --line: #34343c; --panel: #202026;
+          --high: #ff8a80; --medium: #ffb74d; --low: #9ccc9c; --unsure: #a2a2ad; --accent: #8fa8ff; }
+}
+* { box-sizing: border-box; }
+body { margin: 0; background: var(--bg); color: var(--fg);
+       font: 16px/1.5 system-ui, -apple-system, "Segoe UI", Roboto, sans-serif; }
+main { max-width: 760px; margin: 0 auto; padding: 24px 16px 64px; }
+h1 { font-size: 1.5rem; line-height: 1.25; margin: 0 0 12px; }
+h2 { font-size: 1.1rem; margin: 0 0 8px; }
+.lead { font-size: 1.05rem; }
+.hint, .note { color: var(--muted); font-size: .93rem; }
+.lists { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; margin: 16px 0; }
+.lists > div, .group, .recipe, fieldset { background: var(--panel); border: 1px solid var(--line);
+       border-radius: 8px; padding: 12px 16px; }
+@media (max-width: 560px) { .lists { grid-template-columns: 1fr; } }
+.field { display: block; margin: 16px 0; }
+fieldset { margin: 16px 0; }
+button { font: inherit; padding: 6px 14px; border-radius: 6px; border: 1px solid var(--line);
+         background: var(--bg); color: var(--fg); cursor: pointer; }
+button.primary { background: var(--accent); color: #fff; border-color: var(--accent); }
+button.link { border: 0; background: none; color: var(--accent); padding: 0; text-decoration: underline; }
+progress { width: 100%; height: 12px; }
+.report-head { display: flex; justify-content: space-between; align-items: baseline; gap: 16px; flex-wrap: wrap;
+               border-bottom: 1px solid var(--line); margin-bottom: 12px; }
+.report-head p { color: var(--muted); margin: 0; text-align: right; }
+.banner { background: var(--panel); border-left: 4px solid var(--accent); padding: 8px 12px; }
+.recipe { margin: 12px 0; }
+.recipe h3 { margin: 0; font-size: 1.05rem; display: flex; gap: 10px; align-items: baseline; }
+.level { font-size: .8rem; font-weight: 700; letter-spacing: .04em; white-space: nowrap; }
+.level.high { color: var(--high); } .level.medium { color: var(--medium); }
+.level.low { color: var(--low); } .level.unsure { color: var(--unsure); }
+.group { margin: 16px 0; }
+ul, ol { padding-left: 20px; margin: 6px 0; }
+li { margin: 4px 0; }
+.thumbs { display: flex; flex-wrap: wrap; gap: 8px; margin-top: 8px; }
+.thumb { width: 120px; font-size: .8rem; color: var(--muted); }
+.thumb img { width: 120px; height: 120px; object-fit: cover; border-radius: 6px; display: block; background: var(--line); }
+.finding { display: flex; justify-content: space-between; gap: 8px; align-items: baseline; }
+.actions { display: flex; flex-wrap: wrap; gap: 8px; margin: 24px 0; }
+pre { white-space: pre-wrap; word-break: break-word; font-size: .85rem; }
+.card { margin-top: 32px; border: 2px dashed var(--line); border-radius: 8px; padding: 12px 16px; }
+dialog { border: 1px solid var(--line); border-radius: 8px; background: var(--bg); color: var(--fg); }
+menu { display: flex; gap: 8px; padding: 0; justify-content: flex-end; }
+
+/* Printing gives only the safety card, never the report: the printout can be
+   left on a desk, so it must hold no finding about the person. */
+@media print {
+  body { background: #fff; color: #000; }
+  .view, dialog { display: none !important; }
+  .card { border: 2px solid #000; margin: 0; font-size: 14pt; }
+}

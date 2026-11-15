@@ -1,0 +1,146 @@
+<!doctype html>
+<!--
+  One page, three views (start, progress, report), no build step and no CDN:
+  the app must work with Wi-Fi off, so every byte is served from this laptop.
+-->
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Exposure self-audit</title>
+<link rel="stylesheet" href="/static/style.css">
+</head>
+<body>
+<main>
+
+<section id="start" class="view">
+  <h1>What can a stranger build from your Instagram?</h1>
+  <p class="lead">Pick your own Instagram data export (the JSON ZIP from "Download your information").
+     Everything is read on this laptop.</p>
+  <div class="lists">
+    <div>
+      <h2>What I will read</h2>
+      <ul>
+        <li>Your profile info file</li>
+        <li>The lists of your posts, stories and reels</li>
+        <li>The photos and videos those lists point to</li>
+      </ul>
+    </div>
+    <div>
+      <h2>What I will never open</h2>
+      <ul>
+        <li>Your messages</li>
+        <li>Your contacts and searches</li>
+        <li>Ad data, and anything else in the export</li>
+      </ul>
+    </div>
+  </div>
+  <p class="note">I never ask for your password, an OTP or your Instagram login. Nothing is saved after you close the app.</p>
+
+  <form id="pick">
+    <label class="field">Your export (ZIP)
+      <input type="file" id="export" accept=".zip,application/zip" required>
+    </label>
+    <fieldset class="field">
+      <legend>Optional: your voice</legend>
+      <p class="hint">Read one sentence aloud (about 8 seconds) so I can tell your voice from other people's in reels.
+        It stays in memory and is dropped when the run ends.</p>
+      <button type="button" id="rec">Record one sentence</button>
+      <span id="rec-state" class="hint"></span>
+      <label class="hint">or pick a recording <input type="file" id="enrol" accept="audio/*"></label>
+    </fieldset>
+    <button type="submit" class="primary">Check my export</button>
+  </form>
+</section>
+
+<section id="progress" class="view" hidden>
+  <h1>Reading your export</h1>
+  <p id="stage">Starting…</p>
+  <progress id="bar" max="1" value="0"></progress>
+  <p class="hint">This runs on this laptop. Large exports take a few minutes.</p>
+</section>
+
+<section id="failed" class="view" hidden>
+  <h1>I couldn't read that</h1>
+  <p id="error"></p>
+  <button type="button" data-restart>Pick another file</button>
+</section>
+
+<section id="report" class="view" hidden>
+  <header class="report-head">
+    <h1>What a stranger can build from your profile</h1>
+    <p id="counts"></p>
+  </header>
+  <p id="private-banner" class="banner" hidden></p>
+  <p id="summary"></p>
+  <p id="voice-note" class="note" hidden></p>
+
+  <div id="recipes"></div>
+
+  <div id="unsure-group" class="group" hidden>
+    <h2>Not sure</h2>
+    <p class="hint">I saw something but couldn't read it well enough. Have a look yourself.</p>
+    <ul id="unsure"></ul>
+  </div>
+
+  <div class="group">
+    <h2>Do these first</h2>
+    <ol id="fixes"></ol>
+    <p id="private-lower" class="note" hidden></p>
+  </div>
+
+  <div id="past-group" class="group" hidden>
+    <h2>Past exposure</h2>
+    <p class="hint">These were in stories, which have already disappeared. Anyone who saw them may still have a copy.</p>
+    <ul id="past"></ul>
+  </div>
+
+  <div id="couldnt-group" class="group" hidden>
+    <h2>What I couldn't check</h2>
+    <ul id="couldnt"></ul>
+  </div>
+
+  <div class="actions">
+    <button type="button" id="left">What left this laptop?</button>
+    <button type="button" onclick="window.print()">Print the safety card</button>
+    <button type="button" id="forget">Forget this run</button>
+  </div>
+  <div id="payload-box" class="group" hidden>
+    <h2>What left this laptop</h2>
+    <p id="sent-line"></p>
+    <pre id="payload"></pre>
+  </div>
+</section>
+
+<!-- Print-only page: shown on screen too, so people know it exists. -->
+<section id="card" class="card">
+  <h2>Family safety card</h2>
+  <ol>
+    <li>Agree a family code word <strong>in person</strong>. Never type it into any app or chat.</li>
+    <li>If someone calls in a family member's voice asking for money or an OTP, hang up and call them back on the number you already have. Ask for the code word.</li>
+    <li>Nobody genuine needs your OTP, PIN or a copy of your ID over a call.</li>
+    <li>Report cyber fraud: call <strong>1930</strong> (National Cyber Crime Helpline) or report at <strong>cybercrime.gov.in</strong>.</li>
+  </ol>
+</section>
+
+<dialog id="missed-dialog">
+  <form method="dialog">
+    <p>What did I miss in this post?</p>
+    <select id="missed-cat">
+      <option value="ID_DOCUMENT">An ID document</option>
+      <option value="FINANCIAL">A bank card or account detail</option>
+      <option value="TRAVEL_DOC">A ticket or boarding pass</option>
+      <option value="CONTACT">A phone number or email</option>
+      <option value="FAMILY_RELATION">A family member's name</option>
+      <option value="AWAY_STATUS">That I'm away from home</option>
+      <option value="INSTITUTION">My college or workplace</option>
+      <option value="FACE_CLEAR">A clear photo of my face</option>
+    </select>
+    <menu><button value="cancel">Cancel</button><button value="ok" class="primary">Add it</button></menu>
+  </form>
+</dialog>
+
+</main>
+<script src="/static/app.js"></script>
+</body>
+</html>
