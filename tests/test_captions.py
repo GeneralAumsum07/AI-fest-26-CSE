@@ -41,3 +41,15 @@ def test_real_gliner_loads_and_finds_a_name():
 
     found = GlinerNames().names("My brother Ravi studies at Mahindra University.")
     assert ("Ravi", "person") in found
+
+
+def test_a_crashing_name_reader_keeps_the_caption_findings():
+    # The name reader (GLiNER) only adds a second support. If it crashes, the
+    # caption model's findings are still good; losing them turned one optional
+    # helper's failure into a whole "couldn't check" caption.
+    class Broken:
+        def names(self, text):
+            raise RuntimeError("gliner died")
+    b = FakeCaptions([CaptionFinding(category="FAMILY_RELATION", what="mother", value="Amma")])
+    out = read_caption("i", "Happy birthday Amma", b, Broken())
+    assert [(r.reader, r.value) for r in out] == [("caption", "Amma")]

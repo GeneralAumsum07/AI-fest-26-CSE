@@ -112,7 +112,13 @@ def read_caption(item_id: str, caption: str, backend: CaptionBackend,
         return []
     found = backend.read(caption)
     out: list[RawFinding] = []
-    ents = names.names(caption) if (names is not None and found and is_latin(caption)) else []
+    try:
+        ents = names.names(caption) if (names is not None and found and is_latin(caption)) else []
+    except Exception:
+        # The name reader only ever adds a second support. If it fails, keep
+        # the caption model's findings at one support ("likely") instead of
+        # letting the exception discard them and mark the caption unchecked.
+        ents = []
     for f in found:
         out.append(RawFinding(item_id=item_id, category=f.category, what=f.what,
                               extracted_text=f.value, value=f.value, reader="caption"))
