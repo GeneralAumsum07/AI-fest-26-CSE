@@ -17,6 +17,14 @@ VISION_FALLBACKS = ["qwen3-vl:4b", "qwen2.5vl:7b", "qwen3.5:2b"]
 # per image and adds nothing to a schema-constrained listing. None means "do
 # not send the flag" (for models that reject it).
 VISION_THINK: bool | None = False
+# Hard bounds on every model call. Clipping the parsed answer happens after the
+# model has finished; these stop a looping model or a hung server from holding
+# the GPU lock for the whole audit. Provisional and unmeasured: a normal answer
+# (a few findings and a short transcription) is estimated well under 2048
+# tokens. An answer cut off at the cap fails to parse and takes the existing
+# short-prompt retry. Retune both on the development split once the model is in.
+MODEL_MAX_TOKENS = 2048
+MODEL_TIMEOUT_S = 120.0
 
 # Presidio's phone recogniser scores 0.4 before context words, so anything
 # higher would drop bare phone numbers (Task 3).

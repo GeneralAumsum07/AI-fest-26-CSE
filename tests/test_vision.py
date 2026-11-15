@@ -35,6 +35,35 @@ def test_oversized_output_is_clipped():
     assert all(f.reader == "vision" and f.item_id == "p/media-0" for f in out)
 
 
+def test_model_calls_are_bounded_in_length_and_time(monkeypatch, jpg):
+    # A model stuck in a loop must stop at a token cap, and a hung server must
+    # time out; otherwise one image stalls the whole audit while holding the GPU.
+    import ollama
+
+    from selfaudit import config
+    from selfaudit.perceive.captions import OllamaCaptions
+    from selfaudit.perceive.vision import OllamaVision
+
+    made, calls = [], []
+
+    class Reply:
+        message = type("M", (), {"content": '{"findings": []}'})()
+
+    class FakeClient:
+        def __init__(self, **kw):
+            made.append(kw)
+
+        def chat(self, **kw):
+            calls.append(kw)
+            return Reply()
+
+    monkeypatch.setattr(ollama, "Client", FakeClient)
+    OllamaVision().describe(jpg.read_bytes(), "")
+    OllamaCaptions().read("hello")
+    assert all(kw.get("timeout") == config.MODEL_TIMEOUT_S for kw in made) and len(made) == 2
+    assert all(c["options"]["num_predict"] == config.MODEL_MAX_TOKENS for c in calls) and len(calls) == 2
+
+
 def test_schema_rejects_an_invented_category():
     with pytest.raises(ValueError):
         VisionOutput.model_validate_json('{"findings": [{"category": "SSN", "what": "x", "model_confidence": "high"}]}')

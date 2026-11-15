@@ -90,7 +90,9 @@ class OllamaVision:
         import ollama
 
         self.model = model
-        self._client = ollama.Client(host=host)
+        # A timeout raises inside describe(); perceive_image turns that into a
+        # "couldn't check" line for this one image instead of a stalled audit.
+        self._client = ollama.Client(host=host, timeout=config.MODEL_TIMEOUT_S)
 
     def _chat(self, **kwargs):
         if config.VISION_THINK is not None:
@@ -108,7 +110,7 @@ class OllamaVision:
                 format=VisionOutput.model_json_schema(),
                 # Temperature 0 so the same image gives the same findings, which
                 # keeps development-split numbers reproducible.
-                options={"temperature": 0},
+                options={"temperature": 0, "num_predict": config.MODEL_MAX_TOKENS},
             )
         except ollama.ResponseError as exc:
             if "memory" in str(exc).lower():

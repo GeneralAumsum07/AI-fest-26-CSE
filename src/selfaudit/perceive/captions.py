@@ -59,14 +59,17 @@ class OllamaCaptions:
         import ollama
 
         self.model = model
-        self._client = ollama.Client(host=host)
+        # Same bounds as the vision reader (config.MODEL_*): a timeout raises,
+        # and analyse_items turns it into a caption_error line.
+        self._client = ollama.Client(host=host, timeout=config.MODEL_TIMEOUT_S)
 
     def read(self, caption: str) -> list[CaptionFinding]:
         kwargs = {} if config.VISION_THINK is None else {"think": config.VISION_THINK}
         reply = self._client.chat(
             model=self.model,
             messages=[{"role": "user", "content": CAPTION_PROMPT.format(caption=caption)}],
-            format=CaptionOutput.model_json_schema(), options={"temperature": 0}, **kwargs,
+            format=CaptionOutput.model_json_schema(),
+            options={"temperature": 0, "num_predict": config.MODEL_MAX_TOKENS}, **kwargs,
         )
         return CaptionOutput.model_validate_json(reply.message.content).findings
 

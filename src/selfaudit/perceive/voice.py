@@ -118,25 +118,39 @@ def _dominant_cluster(embs: np.ndarray, durs: np.ndarray) -> np.ndarray:
     """Average-linkage agglomerative clustering at cosine distance 1 - SIM_THRESHOLD;
     return a boolean mask of the cluster with the most seconds.
 
-    Hand-written because n is small (segments in one person's posts) and it
-    saves a scipy/sklearn dependency for one function.
+    Hand-written to save a scipy/sklearn dependency for one function.
+
+    Why the Lance-Williams update: the average similarity between a merged
+    cluster and any other is the size-weighted mean of the two old rows, so the
+    cluster-to-cluster matrix is updated in place instead of re-averaging every
+    pair of members each round. Same merges, same result as the pairwise loop
+    (pinned by test_fast_clustering_matches_the_original), but a reel-heavy
+    profile of ~1,000 segments takes about a second instead of many minutes.
     """
     n = len(embs)
-    clusters = [[i] for i in range(n)]
-    sim = embs @ embs.T
+    clusters: list[list[int] | None] = [[i] for i in range(n)]
+    size = np.ones(n)
+    sim = (embs @ embs.T).astype(float)
+    # Only pairs a < b among live clusters compete; everything else is -inf.
+    # Row-major argmax over the upper triangle picks the same first-best pair
+    # as the original nested a < b loops.
+    live = np.triu(np.ones((n, n), dtype=bool), k=1)
     limit = config.SIM_THRESHOLD
-    while len(clusters) > 1:
-        best, pair = -2.0, None
-        for a in range(len(clusters)):
-            for b in range(a + 1, len(clusters)):
-                s = sim[np.ix_(clusters[a], clusters[b])].mean()
-                if s > best:
-                    best, pair = s, (a, b)
-        if best < limit:  # closest pair is further apart than the distance cut
+    while live.any():
+        flat = int(np.argmax(np.where(live, sim, -np.inf)))
+        a, b = divmod(flat, n)
+        if sim[a, b] < limit:  # closest pair is further apart than the distance cut
             break
-        a, b = pair
-        clusters[a] += clusters.pop(b)
-    top = max(clusters, key=lambda c: durs[c].sum())
+        merged = (size[a] * sim[a] + size[b] * sim[b]) / (size[a] + size[b])
+        sim[a, :], sim[:, a] = merged, merged
+        size[a] += size[b]
+        clusters[a] += clusters[b]
+        clusters[b] = None
+        live[b, :] = False
+        live[:, b] = False
+    # Surviving clusters in original index order, as the list-popping loop left them.
+    remaining = [c for c in clusters if c is not None]
+    top = max(remaining, key=lambda c: durs[c].sum())
     mask = np.zeros(n, dtype=bool)
     mask[top] = True
     return mask

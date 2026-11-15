@@ -75,3 +75,51 @@ def test_default_gate_separates_gappy_speech_from_speech_over_a_bed():
     bed = bursts + 0.2 * np.sin(2 * np.pi * 330 * t).astype(np.float32)   # music never stops
     gate = DefaultGate()
     assert gate.is_clean(clean) and not gate.is_clean(bed)
+
+
+def _reference_cluster(embs, durs, limit):
+    """The original pairwise average-linkage loop, kept as the oracle the fast
+    version must agree with exactly (same merges, same winning cluster)."""
+    clusters = [[i] for i in range(len(embs))]
+    sim = embs @ embs.T
+    while len(clusters) > 1:
+        best, pair = -2.0, None
+        for a in range(len(clusters)):
+            for b in range(a + 1, len(clusters)):
+                s = sim[np.ix_(clusters[a], clusters[b])].mean()
+                if s > best:
+                    best, pair = s, (a, b)
+        if best < limit:
+            break
+        a, b = pair
+        clusters[a] += clusters.pop(b)
+    top = max(clusters, key=lambda c: durs[c].sum())
+    mask = np.zeros(len(embs), dtype=bool)
+    mask[top] = True
+    return mask
+
+
+def _voices(n, seed):
+    # A few speakers with noise around each, unit-normalised like ECAPA output.
+    rng = np.random.default_rng(seed)
+    centres = rng.normal(size=(4, 16))
+    e = centres[rng.integers(0, 4, n)] + 0.6 * rng.normal(size=(n, 16))
+    return e / np.linalg.norm(e, axis=1, keepdims=True), rng.uniform(1, 6, n)
+
+
+@pytest.mark.parametrize("seed", range(5))
+def test_fast_clustering_matches_the_original(seed):
+    from selfaudit import config
+    from selfaudit.perceive.voice import _dominant_cluster
+    embs, durs = _voices(60, seed)
+    assert (_dominant_cluster(embs, durs) == _reference_cluster(embs, durs, config.SIM_THRESHOLD)).all()
+
+
+def test_clustering_a_reel_heavy_profile_is_quick():
+    # About 1,000 segments; the pairwise loop took minutes here.
+    import time
+    from selfaudit.perceive.voice import _dominant_cluster
+    embs, durs = _voices(1000, 7)
+    t = time.perf_counter()
+    _dominant_cluster(embs, durs)
+    assert time.perf_counter() - t < 10
