@@ -8,6 +8,10 @@ dependencies = [
   "pillow", "numpy", "av", "ollama",
   "presidio-analyzer", "spacy", "gliner",
   "torch", "torchaudio", "speechbrain", "silero-vad", "pyyaml",
+  # GLiNER does not declare it, but transformers 5 rebuilds GLiNER's mDeBERTa
+  # tokenizer through SentencePieceExtractor, which needs protobuf. Without it
+  # the name reader fails to load (pinned by test_real_gliner_loads_and_finds_a_name).
+  "protobuf>=7.36.2",
   # spaCy models are not on PyPI. Pinned to the release matching spaCy 3.8 so
   # `uv sync` installs it and nobody has to run `spacy download` by hand.
   "en-core-web-sm @ https://github.com/explosion/spacy-models/releases/download/en_core_web_sm-3.8.0/en_core_web_sm-3.8.0-py3-none-any.whl",

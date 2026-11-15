@@ -1,5 +1,7 @@
 """Task 5: caption reader and the independent name cross-check (both faked)."""
 
+import pytest
+
 from helpers import FakeCaptions, FakeNames
 from selfaudit.perceive.captions import CaptionFinding, is_latin, read_caption
 
@@ -26,3 +28,16 @@ def test_no_second_reader_for_non_latin_captions():
 def test_empty_caption_calls_nothing():
     b = FakeCaptions([])
     assert read_caption("i", "  ", b, None) == [] and b.calls == 0
+
+
+@pytest.mark.gpu
+def test_real_gliner_loads_and_finds_a_name():
+    # The fakes above cannot catch a model that fails to load. With
+    # transformers 5, GLiNER's mDeBERTa tokenizer is rebuilt through
+    # SentencePieceExtractor, which needs protobuf; without it every caption
+    # that reaches the name reader became a caption_error. (Marked gpu as the
+    # opt-in "real models" group, although GLiNER itself runs on the CPU.)
+    from selfaudit.perceive.captions import GlinerNames
+
+    found = GlinerNames().names("My brother Ravi studies at Mahindra University.")
+    assert ("Ravi", "person") in found
