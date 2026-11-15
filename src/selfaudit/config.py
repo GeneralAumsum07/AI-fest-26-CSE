@@ -45,9 +45,15 @@ MIN_SEGMENT_S = 1.0
 # above the clip's own non-speech parts (music, crowd, wind). Tuned in Task 9.
 CLEAN_SNR_DB = 15.0
 
-# Cap on media items read per audit (Task 12). None until Task 7's speed
-# measurement says how many images fit in the time a person will wait.
-MAX_ITEMS: int | None = None
+# Cap on media items read per audit (Task 12), newest first; the rest are
+# listed as "couldn't check (over limit)", never silently dropped.
+# Measured 2026-11-16 (100 dev items, warm RTX 5060, qwen3.5:4b): a photo
+# costs ~4 s end to end (2.9 s image + 1.1 s caption), a long reel ~30 s
+# (8 frames + caption + 6.4 s voice). Target wait: about 5 minutes. 40 items
+# is ~2.7 min all photos, ~4 min for a ~10% reel mix, leaving room for the
+# 83 s cold model load measured at hour 0. Not a hard bound: the cap counts
+# files, not frames, so a profile of only long reels still runs ~20 min.
+MAX_ITEMS: int | None = 40
 
 # Leak check (Task 13): secrets shorter than this are not searched for, because
 # the payload type has no field that could carry them, and a 3-character
