@@ -1,0 +1,41 @@
+[project]
+name = "selfaudit"
+version = "0.1.0"
+description = "Audit your own Instagram export for what an impersonation scammer could harvest."
+requires-python = ">=3.12,<3.13"
+dependencies = [
+  "fastapi", "uvicorn", "python-multipart", "pydantic>=2", "httpx",
+  "pillow", "numpy", "av", "ollama",
+  "presidio-analyzer", "spacy", "gliner",
+  "torch", "torchaudio", "speechbrain", "silero-vad", "pyyaml",
+]
+
+[dependency-groups]
+dev = ["pytest"]
+
+# The package must be installed (not just present) for `python -m selfaudit`
+# to work from a src/ layout.
+[build-system]
+requires = ["hatchling"]
+build-backend = "hatchling.build"
+
+[tool.hatch.build.targets.wheel]
+packages = ["src/selfaudit"]
+
+# The RTX 50-series (sm_120) needs a recent CUDA build of PyTorch; the default
+# PyPI wheel on Windows is CPU-only. If this index has no wheel for Python 3.12,
+# use the newest cuXXX index listed at pytorch.org.
+[[tool.uv.index]]
+name = "pytorch-cuda"
+url = "https://download.pytorch.org/whl/cu128"
+explicit = true
+
+[tool.uv.sources]
+torch = { index = "pytorch-cuda" }
+torchaudio = { index = "pytorch-cuda" }
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]
+markers = ["gpu: needs the local models and the GPU"]
+# GPU tests are opt-in (`-m gpu`) so the default run is fast and works anywhere.
+addopts = "-m 'not gpu'"

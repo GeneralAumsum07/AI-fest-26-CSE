@@ -1,0 +1,16 @@
+# Test data and results never enter version control: the held-out set must stay
+# unseen, and nothing personal should ever be committed by accident.
+data/
+results/
+*.zip
+
+.venv/
+__pycache__/
+*.pyc
+.pytest_cache/
+
+# SpeechBrain downloads model files here on first use.
+pretrained_models/
+
+# Plan-execution scratch (ledger, briefs, review packages).
+.superpowers/
