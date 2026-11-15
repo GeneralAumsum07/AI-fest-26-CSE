@@ -236,9 +236,13 @@ def _poster(lines: list[str], rng: random.Random, color=(250, 245, 230)) -> Imag
     """A plain printed thing (bill, ticket, cover, meme): text on a card."""
     img = Image.new("RGB", (800, 1000), color)
     d = ImageDraw.Draw(img)
+    # Ink follows the card: dark ink on a dark card (the concert ticket) left
+    # an unreadable picture, which tests nothing. Rec. 601 luma decides.
+    light = 0.299 * color[0] + 0.587 * color[1] + 0.114 * color[2] > 128
+    ink = (30, 30, 30) if light else (245, 245, 245)
     y = 80
     for line in lines:
-        d.text((60, y), line, fill=(30, 30, 30), font=_font(44))
+        d.text((60, y), line, fill=ink, font=_font(44))
         y += 90
     return img
 

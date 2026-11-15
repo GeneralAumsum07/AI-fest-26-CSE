@@ -56,3 +56,21 @@ def test_freeze_detects_any_change(tmp_path):
     assert verify(tmp_path)
     (tmp_path / "a.jpg").write_bytes(b"2")
     assert not verify(tmp_path)
+
+
+def test_every_hard_negative_poster_is_legible():
+    # A hard negative only tests the reader if its text can be read: a dark
+    # card with dark ink is a blank picture, not a "looks risky" case.
+    from PIL import Image, ImageStat
+    from selfaudit.devtools.synthetic import _HARD_KINDS, _hard_negative
+
+    bg = Image.new("RGB", (600, 400), (120, 120, 120))
+    for kind in _HARD_KINDS:
+        img, _ = _hard_negative(kind, random.Random(1), bg)
+        if kind == "occluded_id":
+            continue  # a composited photo, not a poster
+        grey = img.convert("L")
+        card = grey.getpixel((5, 5))
+        text = ImageStat.Stat(grey.crop((40, 60, 760, 500))).extrema[0]
+        far = max(abs(card - text[0]), abs(card - text[1]))
+        assert far >= 100, f"{kind}: ink differs from the card by only {far} grey levels"
