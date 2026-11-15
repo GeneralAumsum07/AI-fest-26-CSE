@@ -9,8 +9,8 @@ from datetime import datetime, timezone
 import pytest
 from helpers import Fd
 
-from selfaudit.fixes import candidate_fixes, private_would_lower, rank_fixes
-from selfaudit.models import Post, Profile, VoiceResult
+from selfaudit.fixes import candidate_fixes, fix_weight, private_would_lower, rank_fixes
+from selfaudit.models import Fix, Post, Profile, RecipeResult, VoiceResult
 from selfaudit.perceive.voice import band_for
 from selfaudit.recipes import LEVEL_RANK
 
@@ -79,6 +79,42 @@ def test_nothing_useless_and_no_face_posts_are_suggested(scenario):
 
 def test_at_most_five(scenario):
     assert len(rank_fixes(*scenario(id_posts=[f"p{i}" for i in range(9)]), weight=drops)) <= 5
+
+
+def _rr(rid, level):
+    return RecipeResult(recipe_id=rid, level=level, not_sure=False, has=[], missing=[], amplifiers=[], look_at=[])
+
+
+def _fx(action="remove", posts=("p1",), ends=(), weakens=()):
+    return Fix(post_ids=list(posts), action=action, removes=["ID_DOCUMENT"], ends=list(ends), weakens=list(weakens))
+
+
+def test_ending_a_high_risk_beats_lowering_one():
+    before = [_rr("R3", "high")]
+    ends = fix_weight(_fx(ends=["R3"]), before, [_rr("R3", None)])
+    lowers = fix_weight(_fx(weakens=["R3"]), before, [_rr("R3", "medium")])
+    assert ends > lowers > 0
+
+
+def test_lowering_a_high_risk_beats_ending_a_low_one():
+    lowers_high = fix_weight(_fx(weakens=["R1"]), [_rr("R1", "high")], [_rr("R1", "medium")])
+    ends_low = fix_weight(_fx(ends=["R1"]), [_rr("R1", "low")], [_rr("R1", None)])
+    assert lowers_high > ends_low
+
+
+def test_the_same_change_is_worth_less_when_it_takes_more_posts_or_a_bigger_action():
+    before, after = [_rr("R1", "medium")], [_rr("R1", "low")]
+    one = fix_weight(_fx("edit_caption", ["p1"], weakens=["R1"]), before, after)
+    four = fix_weight(_fx("edit_caption", ["p1", "p2", "p3", "p4"], weakens=["R1"]), before, after)
+    removed = fix_weight(_fx("remove", ["p1"], weakens=["R1"]), before, after)
+    assert one > four and one > removed
+
+
+def test_with_the_real_weight_the_id_photo_is_still_first(scenario):
+    # The intent in one line: an ID card on the grid is the first thing to go,
+    # ahead of family captions and voice reels.
+    fixes = rank_fixes(*scenario(id_posts=["p1"], family_posts=["p2", "p3"], reels={"r1": 25, "r2": 15, "r3": 10}))
+    assert (fixes[0].post_ids, fixes[0].action) == (["p1"], "remove")
 
 
 def test_a_photographed_detail_is_cropped_not_captioned(scenario):

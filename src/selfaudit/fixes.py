@@ -89,17 +89,55 @@ def private_would_lower(findings: list[Finding], voice: VoiceResult, profile: Pr
     return ends + weakens
 
 
+# How much effort each action asks of the person, relative to a caption edit.
+# A caption edit keeps the post and takes seconds. A crop means re-editing an
+# image. Archiving hides the post but can be undone from the app, so it costs
+# less than a removal, which loses the post and its likes for good.
+_ACTION_EFFORT = {"edit_caption": 1.0, "crop": 1.5, "archive": 1.5, "remove": 2.0}
+# Each extra post in the same fix costs half as much as the first: once the
+# person knows what to do, repeating it on the next post is quicker.
+_EXTRA_POST_EFFORT = 0.5
+# A recipe that disappears from the report entirely is a finished job the
+# person can see; a recipe that only drops a level still sits on the screen.
+_END_BONUS = 1.0
+
+
+def _harm_lowered(before_level: str | None, after_level: str | None) -> float:
+    """Severity removed, counting each step down by the level it leaves.
+
+    high -> medium is worth 3, medium -> low 2, low -> gone 1. So lowering a
+    High risk one step (3) beats ending a Low one (1 + bonus), and ending a
+    High risk outright (3 + 2 + 1 = 6) beats everything a weakening can do.
+    """
+    hi, lo = LEVEL_RANK[before_level], LEVEL_RANK[after_level]
+    return float(sum(range(lo + 1, hi + 1)))
+
+
 def fix_weight(fix: Fix, before: list[RecipeResult], after: list[RecipeResult]) -> float:
     """How much this fix is worth recommending. Zero or less means never suggest it.
 
-    `fix.ends` lists recipes this fix stops showing; `fix.weakens` lists recipes
-    shown at a lower level. `before`/`after` carry each recipe's level and
-    amplifiers. `fix.action` and `len(fix.post_ids)` are the effort it asks for.
+    Score = harm removed / effort asked. Harm uses `before`/`after` levels
+    directly (not just the ends/weakens lists) so a High -> Low drop counts
+    both steps. Effort is the action's cost, with each extra post at half price.
 
-    Rachit writes this (plan Task 11, step 5): it decides what the product
-    recommends first.
+    Deliberately left out (open decisions, see the PR notes):
+    - Sentimental posts: the function sees categories, not captions, and the
+      cheapest action for FAMILY_RELATION is already a caption edit, which
+      keeps the post. No extra penalty.
+    - Amplifier-only fixes: `rank_fixes` drops any fix that changes no level
+      before this is called, so scoring amplifiers here would do nothing.
     """
-    raise NotImplementedError
+    now = {r.recipe_id: r.level for r in after}
+    harm = 0.0
+    for r in before:
+        if r.level is None:
+            continue
+        harm += _harm_lowered(r.level, now.get(r.recipe_id))
+    harm += _END_BONUS * len(fix.ends)
+    if harm <= 0:
+        return 0.0  # changes nothing the person can see: never suggest it
+    effort = _ACTION_EFFORT[fix.action] * (1 + _EXTRA_POST_EFFORT * max(len(fix.post_ids) - 1, 0))
+    return harm / effort
 
 
 def rank_fixes(findings: list[Finding], voice: VoiceResult, profile: Profile, *, top_n: int = 5,
