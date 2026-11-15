@@ -90,6 +90,11 @@ def test_the_model_must_fill_extracted_text(monkeypatch, jpg):
     OllamaVision().describe(jpg.read_bytes(), "")
     schema = calls[0]["format"]
     assert "extracted_text" in schema["$defs"]["VisionFinding"]["required"]
+    # Same failure, second field (debugged 2026-11-15, dev-012): the model
+    # called a card "a mock student identity card" but skipped id_subtype, so
+    # the college ID never became INSTITUTION. Required (still nullable), it
+    # answered "institutional" for the student card and "government" for PAN.
+    assert "id_subtype" in schema["$defs"]["VisionFinding"]["required"]
 
 
 def test_schema_rejects_an_invented_category():

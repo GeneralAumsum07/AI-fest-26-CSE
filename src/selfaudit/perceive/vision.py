@@ -52,8 +52,13 @@ def _answer_schema() -> dict:
     """
     schema = VisionOutput.model_json_schema()
     required = schema["$defs"]["VisionFinding"]["required"]
-    if "extracted_text" not in required:
-        required.append("extracted_text")
+    # id_subtype too, for the same reason: on a college ID the model said
+    # "student identity card" yet skipped the field, and grounding only turns
+    # an *institutional* ID into INSTITUTION. Required, the field may still be
+    # null (the schema allows it), but the model has to decide.
+    for field in ("extracted_text", "id_subtype"):
+        if field not in required:
+            required.append(field)
     return schema
 
 
@@ -72,13 +77,14 @@ Categories:
 - TRAVEL_DOC: a boarding pass, ticket or itinerary showing a name, PNR or travel date.
 - CONTACT: a phone number, email address or home address written out.
 - FAMILY_RELATION: text that names a family member or relationship (for example a birthday banner for "Amma").
-- AWAY_STATUS: something that shows the person is travelling or away from home right now.
-- INSTITUTION: the name of their college, school or employer (signboard, ID card, uniform, letterhead).
+- AWAY_STATUS: something that shows the person is travelling or away from home right now, for a day or more (a trip, a journey, a holiday). A ticket to a concert, film or match is an evening out, not away.
+- INSTITUTION: the name of the person's own college, school or employer (signboard, ID card, uniform, letterhead). A college or company ID card counts. A shop, restaurant or brand on a bill or receipt, or the government department on an official ID, is not their institution.
 - FACE_CLEAR: a clear, frontal, well-lit photo of exactly one person's face, good enough to reuse as a profile picture.
 
 Rules:
 - Transcribe text on documents, cards, tickets and signs exactly into extracted_text, and write ? for any character you cannot read; never guess a digit.
 - Do not identify anyone and do not guess who a person is.
+- A concert, film or match ticket with no name, PNR or travel date is not a finding: it is neither TRAVEL_DOC nor AWAY_STATUS.
 - Set model_confidence to how sure you are.
 - If you cannot make out the image at all, set unreadable to true.
 - An ordinary photo has no findings, and that is the usual answer: return an empty list.
