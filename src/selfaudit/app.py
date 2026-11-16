@@ -28,7 +28,7 @@ from selfaudit.perceive.video import MediaError, extract_audio, keyframes
 from selfaudit.pipeline import AllBackends, AuditState, mark_missed, mark_wrong, run_audit
 from selfaudit.wording.cloud import word_report
 from selfaudit.wording.payload import build_payload, post_ordinals
-from selfaudit.wording.templates import voice_note
+from selfaudit.wording.templates import ITEM_WORD, voice_note
 
 # Loopback only, and deliberately not configurable: there is no flag that
 # could put a user's ID photos on the network.
@@ -128,7 +128,8 @@ def create_app(make_backends: Callable[[], AllBackends], call_llm: Callable[[str
         # and names are never served, even to the page on this laptop.
         # The page labels posts exactly as the fix text does ("post 8"), so the
         # same post never carries two different numbers on one screen.
-        labels = {pid: f"post {n}" for pid, n in post_ordinals(state.profile).items()}
+        word = ITEM_WORD[state.profile.platform]   # "video 2" on YouTube, as in the fix text
+        labels = {pid: f"{word} {n}" for pid, n in post_ordinals(state.profile).items()}
         return {"report": report.model_dump(mode="json"), "text": text.model_dump(), "sent_to_cloud": sent,
                 "voice_note": voice_note(report.voice), "post_labels": labels}
 

@@ -124,6 +124,8 @@ class Fix(BaseModel):
 class Report(BaseModel):
     posts_read: int
     is_private: bool
+    # The page words platform-level advice from this ("set your videos to Private").
+    platform: Literal["instagram", "youtube"] = "instagram"
     recipes: list[RecipeResult]
     fixes: list[Fix]
     findings: list[Finding]

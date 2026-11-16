@@ -55,6 +55,7 @@ class AuditState:
         return Report(
             posts_read=len(self.profile.posts),
             is_private=self.profile.is_private,
+            platform=self.profile.platform,
             recipes=evaluate(ingredients, unsure, self.profile),
             fixes=fixes.rank_fixes(self.findings, self.voice, self.profile),
             findings=[f for f in self.findings if f.finding_id not in aside],

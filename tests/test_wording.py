@@ -89,3 +89,55 @@ def test_no_enrolment_line():
     # certainty. The wording must work for YouTube uploads as well as reels.
     assert not re.search(r"\b(?:I|we|sure|certain)\b", note, re.I)
     assert voice_note(v.model_copy(update={"enrolled": True})) is None
+
+
+def _fix_payload(platform):
+    fixes = [FixPayload(rank=1, action="archive", post_ref="post 3", effects=["ends R3"]),
+             FixPayload(rank=2, action="crop", post_ref="post 2", effects=[]),
+             FixPayload(rank=3, action="edit_caption", post_ref="post 1", effects=[])]
+    return WordingPayload(recipes=[], fixes=fixes, language="en", private=False, couldnt_check=0,
+                          platform=platform)
+
+
+def test_youtube_fixes_use_youtube_actions_and_say_video():
+    # YouTube has no archive and a published video cannot be cropped.
+    fixes = render_local(_fix_payload("youtube")).fixes
+    assert fixes[0].startswith("1. Set video 3 to Private")
+    assert fixes[1] == "2. Blur the detail in video 2."
+    assert fixes[2] == "3. Edit the title or description of video 1."
+    assert not any("Archive" in f or "post" in f for f in fixes)
+
+
+def _recipe_payload(platform):
+    recipes = [RecipePayload(id="R1", level="high", not_sure=True, has=["family_relation", "away_status:recent"],
+                             missing=[]),
+               RecipePayload(id="R3", level="high", has=["id_document"], missing=[])]
+    return WordingPayload(recipes=recipes, fixes=[], language="en", private=False, couldnt_check=0,
+                          platform=platform)
+
+
+def test_youtube_recipe_text_says_video_not_post():
+    # The recipe reasons and advice sit on the same screen as "Set video 1 to Private".
+    text = render_local(_recipe_payload("youtube"))
+    words = " ".join(f for r in text.recipes.values() for f in (r.reasons, r.advice))
+    assert "Your videos show videos that name your family" in words
+    assert "Take down the video that shows the number" in words
+    assert not re.search(r"\bposts?\b", words)
+
+
+def test_instagram_recipe_text_still_says_post():
+    words = " ".join(r.reasons + r.advice for r in render_local(_recipe_payload("instagram")).recipes.values())
+    assert "Your posts show posts that name your family" in words and "Take down the post" in words
+
+
+def test_instagram_fixes_are_unchanged():
+    fixes = render_local(_fix_payload("instagram")).fixes
+    assert fixes[0].startswith("1. Archive post 3") and fixes[1] == "2. Crop the detail out of post 2."
+
+
+def test_platform_reaches_the_report_and_the_payload(high_state):
+    from selfaudit.pipeline import AuditState
+    yt = AuditState(profile=high_state.profile.model_copy(update={"platform": "youtube"}),
+                    findings=high_state.findings, voice=high_state.voice)
+    assert yt.report().platform == "youtube" and high_state.report().platform == "instagram"
+    assert build_payload(yt.report(), yt.profile).platform == "youtube"

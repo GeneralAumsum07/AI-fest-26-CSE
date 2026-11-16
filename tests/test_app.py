@@ -157,7 +157,9 @@ def test_feedback_changes_the_report(client, finished_id):
 
 def test_payload_endpoint_shows_exactly_what_would_be_sent(client, finished_id):
     payload = client.get(f"/api/audits/{finished_id}/payload").json()
-    assert set(payload) == {"recipes", "fixes", "language", "private", "couldnt_check"}
+    assert set(payload) == {"recipes", "fixes", "language", "private", "couldnt_check", "platform"}
+    # platform is a two-value literal (it picks the fix wording), never free text.
+    assert payload["platform"] in ("instagram", "youtube")
 
 
 def test_media_endpoint_serves_only_the_profile_s_own_posts(client, finished_id):

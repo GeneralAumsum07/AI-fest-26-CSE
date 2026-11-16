@@ -8,6 +8,8 @@ untested hand translations of risk advice are worse than English.
 
 from __future__ import annotations
 
+import re
+
 from selfaudit.models import VoiceResult
 from selfaudit.wording.payload import RecipeText, ReportText, WordingPayload
 
@@ -41,14 +43,37 @@ _ADVICE = {
     "R3": "Take down the post that shows the number. Anyone who saw it may have kept a copy, so watch for "
           "loans or SIM cards you did not ask for.",
 }
-_VERB = {"remove": "Delete", "archive": "Archive", "crop": "Crop the detail out of", "edit_caption":
-         "Edit the caption of"}
+# "{ref}" is "post 3" (Instagram) or "video 3" (YouTube). Templates rather than
+# verbs because YouTube's private setting reads "Set video 3 to Private".
+_ACTION = {
+    "instagram": {"remove": "Delete {ref}", "archive": "Archive {ref}", "crop": "Crop the detail out of {ref}",
+                  "edit_caption": "Edit the caption of {ref}"},
+    # YouTube has no archive; Private (not Unlisted, which anyone with the link
+    # can still watch) is its "take it out of view but keep it" action. A
+    # published video cannot be cropped, but YouTube Studio can blur part of it.
+    "youtube": {"remove": "Delete {ref}", "archive": "Set {ref} to Private", "crop": "Blur the detail in {ref}",
+                "edit_caption": "Edit the title or description of {ref}"},
+}
+# What the user calls one item: the page labels use the same word (app.py).
+ITEM_WORD = {"instagram": "post", "youtube": "video"}
 
 
 def _join(items: list[str]) -> str:
     if len(items) <= 1:
         return "".join(items)
     return ", ".join(items[:-1]) + " and " + items[-1]
+
+
+def _item_words(text: str, platform: str) -> str:
+    """Say "video(s)" for "post(s)" on YouTube.
+
+    One swap at render time instead of a second copy of _PHRASE and _ADVICE:
+    every "post" in those strings means "one item on the profile", so the
+    swap is safe, and a new phrase added later is covered without anyone
+    remembering a YouTube copy. Whole words only, so "posted" is left alone."""
+    if platform != "youtube":
+        return text
+    return re.sub(r"\b([Pp])ost(s?)\b", lambda m: ("V" if m[1] == "P" else "v") + "ideo" + m[2], text)
 
 
 def render_local(payload: WordingPayload) -> ReportText:
@@ -62,7 +87,8 @@ def render_local(payload: WordingPayload) -> ReportText:
                 [_PHRASE[t] for t in r.missing]) + "."
         if r.not_sure:
             reasons += (" " if reasons else "") + "Some posts may add to this; look at them below."
-        recipes[r.id] = RecipeText(title=TITLES[r.id], reasons=reasons, advice=_ADVICE[r.id])
+        recipes[r.id] = RecipeText(title=TITLES[r.id], reasons=_item_words(reasons, payload.platform),
+                                   advice=_item_words(_ADVICE[r.id], payload.platform))
 
     fixes = []
     for f in payload.fixes:
@@ -72,7 +98,11 @@ def render_local(payload: WordingPayload) -> ReportText:
             # Lower only the first letter: .lower() turned "ID" into "id".
             title = TITLES[rid][0].lower() + TITLES[rid][1:]
             effects.append(("ends" if kind == "ends" else "lowers") + ": " + title)
-        fixes.append(f"{f.rank}. {_VERB[f.action]} {f.post_ref}" + (f" ({'; '.join(effects)})" if effects else "") + ".")
+        # post_ref is always "post N" in the payload (its pattern is the leak
+        # guard); only the words shown here change per platform.
+        ref = f.post_ref.replace("post", ITEM_WORD[payload.platform], 1)
+        action = _ACTION[payload.platform][f.action].format(ref=ref)
+        fixes.append(f"{f.rank}. {action}" + (f" ({'; '.join(effects)})" if effects else "") + ".")
 
     shown = [r for r in payload.recipes if r.level != "none"]
     if shown:

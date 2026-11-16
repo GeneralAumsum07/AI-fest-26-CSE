@@ -44,6 +44,10 @@ class WordingPayload(BaseModel):
     language: Literal["en", "hi", "te"]
     private: bool
     couldnt_check: int = Field(ge=0)
+    # Which export the report is about, so fix wording can use that platform's
+    # own actions (YouTube has no "archive"). A fixed literal: it cannot carry
+    # anything personal, so the payload stays categories and counts only.
+    platform: Literal["instagram", "youtube"] = "instagram"
 
 
 class LeakError(Exception):
@@ -104,7 +108,8 @@ def build_payload(report: Report, profile: Profile, language: str = "en") -> Wor
         fixes.append(FixPayload(rank=rank, action=f.action, post_ref=ref,
                                 effects=[f"ends {r}" for r in f.ends] + [f"weakens {r}" for r in f.weakens]))
     return WordingPayload(recipes=recipes, fixes=fixes, language=language if language in ("en", "hi", "te") else "en",
-                          private=profile.is_private, couldnt_check=len(report.couldnt_check))
+                          private=profile.is_private, couldnt_check=len(report.couldnt_check),
+                          platform=profile.platform)
 
 
 def leaks(text: str, secrets: set[str]) -> bool:

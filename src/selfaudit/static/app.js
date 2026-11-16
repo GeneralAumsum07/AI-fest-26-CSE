@@ -89,9 +89,14 @@ function findingLine(f) {
 
 function render(body) {
   const r = body.report, t = body.text;
+  // YouTube has no private account, only private videos, and calls items videos.
+  const youtube = r.platform === "youtube";
+  const item = youtube ? "video" : "post";
   labels = body.post_labels || {};
   const nCouldnt = r.couldnt_check.length;
-  $("counts").textContent = `${r.posts_read} posts analysed · ${nCouldnt} items excluded or unavailable`;
+  // Same item word as the fix text and the chips, so one screen never says both "post" and "video".
+  $("counts").textContent = `${r.posts_read} ${item}${r.posts_read === 1 ? "" : "s"} analysed · ` +
+    `${nCouldnt} item${nCouldnt === 1 ? "" : "s"} excluded or unavailable`;
   $("summary").textContent = t.summary;
   $("voice-note").hidden = !body.voice_note;
   $("voice-note").textContent = body.voice_note || "";
@@ -107,7 +112,7 @@ function render(body) {
     const lvl = rec.not_sure ? ["unsure", "Needs review"] : [rec.level, LEVEL[rec.level]];
     const { findings, posts: looked } = recipePosts(rec, r);
     const btn = el("button", { class: "link", type: "button" },
-      looked.length === 1 ? "See the post" : `See the ${looked.length} posts`);
+      looked.length === 1 ? `See the ${item}` : `See the ${looked.length} ${item}s`);
     btn.addEventListener("click", () => toggleThumbs(btn, looked));
     box.append(el("article", { class: "recipe" },
       el("div", { class: "recipe-heading" }, el("h3", {}, words.title), el("span", { class: `level ${lvl[0]}` }, lvl[1])),
@@ -133,7 +138,7 @@ function render(body) {
   const fixes = $("fixes");
   fixes.replaceChildren();
   r.fixes.forEach((fx, i) => {
-    const btn = el("button", { class: "link", type: "button" }, fx.post_ids.length === 1 ? "See the post" : "See the posts");
+    const btn = el("button", { class: "link", type: "button" }, `See the ${item}${fx.post_ids.length === 1 ? "" : "s"}`);
     btn.addEventListener("click", () => toggleThumbs(btn, fx.post_ids));
     // The list supplies its own accessible numbering. Strip the plain-text
     // prefix used by offline templates to avoid rendering each rank twice.
@@ -144,7 +149,8 @@ function render(body) {
 
   const lower = r.private_would_lower || [];
   $("private-lower").hidden = !lower.length;
-  $("private-lower").textContent = "Switching your account to private would lower: " +
+  $("private-lower").textContent = (youtube ? "Setting your public videos to Private would lower: "
+                                             : "Switching your account to private would lower: ") +
     lower.map((id) => (t.recipes[id] || { title: id }).title).join("; ") + ".";
 
   $("sent-line").textContent = body.sent_to_cloud
