@@ -135,3 +135,28 @@ def build_persona(
                 z.write(f, f.relative_to(top).as_posix())
     shutil.rmtree(top)
     return zpath
+
+
+# Synthetic decoys: folders a real export has and the audit must refuse. The
+# demo personas get these so the privacy receipt has something to show
+# ("never opened: Messages 60"). Every name and value is a placeholder; none
+# is read by the audit, which is the point. Counts are small and arbitrary.
+_DECOYS = {
+    "your_instagram_activity/messages/inbox/friend_{n}_000{n}/message_1.json": 60,
+    "ads_information/ads_and_topics/ads_viewed_{n}.json": 12,
+    "logged_information/recent_searches/searches_{n}.json": 6,
+    "connections/followers_and_following/followers_{n}.json": 3,
+    "preferences/settings/setting_{n}.json": 4,
+}
+
+
+def add_decoys(root: Path) -> int:
+    """Write placeholder files into an export folder; return how many."""
+    n_written = 0
+    for pattern, count in _DECOYS.items():
+        for n in range(1, count + 1):
+            path = Path(root) / pattern.format(n=n)
+            path.parent.mkdir(parents=True, exist_ok=True)
+            path.write_text(json.dumps({"synthetic_placeholder": True}), encoding="ascii")
+            n_written += 1
+    return n_written

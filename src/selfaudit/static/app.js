@@ -187,6 +187,22 @@ function render(body) {
                                              : "Switching your account to private would lower: ") +
     lower.map((id) => (t.recipes[id] || { title: id }).title).join("; ") + ".";
 
+  // The privacy receipt: counts and fixed labels from the server, never a
+  // file or folder name (message folders are named after people).
+  const acc = r.access;
+  $("access-panel").hidden = !acc;
+  if (acc) {
+    const n = (x) => x.toLocaleString("en-IN");
+    const row = (label, value, cls = "") => [el("dt", { class: cls }, label), el("dd", { class: cls }, n(value))];
+    const never = acc.total - acc.opened;
+    $("access-list").replaceChildren(
+      ...row("Files in your export", acc.total), ...row("Opened for this audit", acc.opened),
+      ...row("Never opened", never), ...acc.never_opened.flatMap((g) => row(g.label, g.count, "sub")));
+    $("access-note").textContent = youtube
+      ? "The audit opens the channel file, the lists of your videos, and the videos those lists name. It cannot open anything else."
+      : "The audit opens the profile file, the lists of your posts, and the photos and videos those lists name. It cannot open anything else.";
+  }
+
   $("sent-line").textContent = body.sent_to_cloud
     ? "This summary was sent to the online wording service. It holds categories and counts only."
     : "Nothing was sent. This is what would be sent if online wording were on.";

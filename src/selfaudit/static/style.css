@@ -190,3 +190,10 @@ menu{display:flex;justify-content:flex-end;gap:10px;padding:0;margin:25px 0 0}
 .check-result { margin-top: 18px; }
 .check-result h3.level { display: inline-block; padding: 6px 12px; border-radius: 8px; font-size: 18px; }
 .check-advice { margin: 12px 0; padding-left: 20px; }
+
+/* Privacy receipt: a two-column list of counts; group rows indented under "Never opened". */
+.access-panel { margin-bottom: 16px; }
+.access-list { display: grid; grid-template-columns: 1fr auto; gap: 4px 12px; margin: 10px 0; font-size: 14px; }
+.access-list dt { margin: 0; }
+.access-list dd { margin: 0; text-align: right; font-variant-numeric: tabular-nums; font-weight: 600; }
+.access-list .sub { padding-left: 14px; font-weight: 400; color: #5b6862; }

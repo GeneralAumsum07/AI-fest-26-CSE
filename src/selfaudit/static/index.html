@@ -8,7 +8,7 @@
 <title>Exposure — Personal privacy audit</title>
 <link rel="icon" type="image/svg+xml" href="/static/mark.svg">
 <link rel="preload" href="/static/fonts/SourceSans3-Upright.woff2" as="font" type="font/woff2" crossorigin>
-<link rel="stylesheet" href="/static/style.css?v=4">
+<link rel="stylesheet" href="/static/style.css?v=5">
 </head>
 <body>
 <a class="skip-link" href="#main">Skip to content</a>
@@ -130,6 +130,7 @@
     </div>
     <aside class="report-sidebar">
       <div class="fix-panel"><span class="panel-icon"><svg class="icon" aria-hidden="true"><use href="/static/icons.svg#check"></use></svg></span><h2>Recommended actions</h2><p class="hint">Start here. Actions are ranked by the exposure they reduce.</p><ol id="fixes"></ol><p id="private-lower" class="note" hidden></p></div>
+      <div class="privacy-panel access-panel" id="access-panel" hidden><h2>What was opened</h2><dl id="access-list" class="access-list"></dl><p id="access-note" class="hint"></p></div>
       <div class="privacy-panel"><h2>Data transparency</h2><p>The report describes exposure without showing the extracted personal details.</p><button type="button" id="left" class="secondary">View wording payload<svg class="icon" aria-hidden="true"><use href="/static/icons.svg#arrow"></use></svg></button></div>
     </aside>
   </div>
@@ -145,6 +146,6 @@
   <form method="dialog"><h2 id="missed-title">Add a finding</h2><p class="hint">Select a detail that was missed in this post.</p><label class="field-label" for="missed-cat">Type of detail</label><select id="missed-cat"><option value="ID_DOCUMENT">An ID document</option><option value="FINANCIAL">A bank card or account detail</option><option value="TRAVEL_DOC">A ticket or boarding pass</option><option value="CONTACT">A phone number or email</option><option value="FAMILY_RELATION">A family member's name</option><option value="AWAY_STATUS">Being away from home</option><option value="INSTITUTION">A college or workplace</option><option value="FACE_CLEAR">A clear face photo</option></select><menu><button value="cancel" class="secondary">Cancel</button><button value="ok" class="primary">Add finding</button></menu></form>
 </dialog>
 </main>
-<script src="/static/app.js?v=6"></script>
+<script src="/static/app.js?v=7"></script>
 </body>
 </html>

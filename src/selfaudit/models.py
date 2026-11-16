@@ -48,6 +48,18 @@ class Post(BaseModel):
     media: list[MediaItem]
 
 
+class AccessGroup(BaseModel):
+    label: str          # from the fixed table in ingest/access.py, never a folder name
+    count: int
+
+
+class Access(BaseModel):
+    """The privacy receipt: counts only (ingest/access.py)."""
+    total: int
+    opened: int
+    never_opened: list[AccessGroup]
+
+
 class Profile(BaseModel):
     name: str
     username: str
@@ -62,6 +74,8 @@ class Profile(BaseModel):
     reference_date: datetime
     couldnt_check: list[Skipped] = []
     not_checked: list[Skipped] = []
+    # Filled after media is read, so "opened" includes every photo and video.
+    access: Access | None = None
 
 
 class RawFinding(BaseModel):
@@ -135,3 +149,4 @@ class Report(BaseModel):
     couldnt_check: list[Skipped]
     not_checked: list[Skipped]
     private_would_lower: list[str]  # recipe ids going private would lower; empty when already private
+    access: Access | None = None

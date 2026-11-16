@@ -20,6 +20,7 @@ from typing import Callable
 import numpy as np
 
 from selfaudit import config, fixes
+from selfaudit.ingest.access import summarise
 from selfaudit.ingest.export import load_profile, open_export
 from selfaudit.models import Category, Finding, Profile, Report, Skipped, VoiceResult
 from selfaudit.perceive.items import Backends, ItemInput, analyse_items
@@ -65,6 +66,7 @@ class AuditState:
             couldnt_check=self.couldnt_check,
             not_checked=self.profile.not_checked,
             private_would_lower=fixes.private_would_lower(self.findings, self.voice, self.profile),
+            access=self.profile.access,
         )
 
     def secrets(self) -> set[str]:
@@ -130,6 +132,8 @@ def run_audit(export_path: Path, enrol: np.ndarray | None, backends: AllBackends
         profile = load_profile(export_path, max_items=max_items, source=src)
         couldnt = list(profile.couldnt_check)
         items, clips = _items_and_audio(profile, src, couldnt)
+        # After the media reads, so the receipt counts every file this run opened.
+        profile = profile.model_copy(update={"access": summarise(src.names, src.opened)})
     log.info("audit: %d posts, %d items, %d clips", len(profile.posts), len(items), len(clips))
 
     findings, skipped = analyse_items(items, backends, on_progress=on_progress)
