@@ -40,8 +40,10 @@ _ADVICE = {
           "asking for money.",
     "R2": "Tell close friends you will never ask for money or codes in a message, and to call you if "
           "\"you\" ever do.",
-    "R3": "Take down the post that shows the number. Anyone who saw it may have kept a copy, so watch for "
-          "loans or SIM cards you did not ask for.",
+    # The concrete steps (Sanchar Saathi, UIDAI, 1930) are fixed text from
+    # wording/next_steps.py, shown under this line; this line can be reworded.
+    "R3": "Take down the post that shows the number. Anyone who saw it may have kept a copy, so take "
+          "these steps tonight:",
 }
 # "{ref}" is "post 3" (Instagram) or "video 3" (YouTube). Templates rather than
 # verbs because YouTube's private setting reads "Set video 3 to Private".

@@ -31,6 +31,7 @@ from selfaudit.models import Category, Report
 from selfaudit.perceive.video import MediaError, extract_audio, keyframes
 from selfaudit.pipeline import AllBackends, AuditState, mark_missed, mark_wrong, run_audit
 from selfaudit.wording.cloud import word_report
+from selfaudit.wording.next_steps import caller_knows, next_steps
 from selfaudit.wording.payload import build_payload, post_ordinals
 from selfaudit.wording.templates import ITEM_WORD, voice_note
 
@@ -141,7 +142,11 @@ def create_app(make_backends: Callable[[], AllBackends], call_llm: Callable[[str
         word = ITEM_WORD[state.profile.platform]   # "video 2" on YouTube, as in the fix text
         labels = {pid: f"{word} {n}" for pid, n in post_ordinals(state.profile).items()}
         return {"report": report.model_dump(mode="json"), "text": text.model_dump(), "sent_to_cloud": sent,
-                "voice_note": voice_note(report.voice), "post_labels": labels}
+                "voice_note": voice_note(report.voice), "post_labels": labels,
+                # Fixed text, outside `text` so the cloud wording never rewords an
+                # official service name or a helpline number (wording/next_steps.py).
+                "next_steps": next_steps(report.recipes),
+                "caller_knows": caller_knows(report.findings, report.recipes, report.voice.band)}
 
     def start(export_path: Path, folder: Path, enrol) -> str:
         id_ = uuid.uuid4().hex

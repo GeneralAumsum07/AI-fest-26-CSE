@@ -139,6 +139,7 @@ function render(body) {
       continue;
     }
     const { findings, posts: looked } = recipePosts(rec, r);
+    const steps = (body.next_steps || {})[rec.recipe_id] || [];
     const btn = el("button", { class: "link", type: "button" },
       looked.length === 1 ? `See the ${item}` : `See the ${looked.length} ${item}s`);
     btn.addEventListener("click", () => toggleThumbs(btn, looked));
@@ -147,6 +148,8 @@ function render(body) {
       el("p", {}, words.reasons),
       findings.length ? el("ul", { class: "findings" }, ...findings.map(findingLine)) : null,
       words.advice ? el("p", { class: "advice" }, words.advice) : null,
+      // Fixed steps from the server (official services, checked by hand); never reworded.
+      steps.length ? el("ol", { class: "next-steps" }, ...steps.map((s) => el("li", {}, s))) : null,
       looked.length ? btn : null));
   }
   if (!box.children.length) box.append(el("article", { class: "recipe empty-report" },
@@ -202,6 +205,12 @@ function render(body) {
       ? "The audit opens the channel file, the lists of your videos, and the videos those lists name. It cannot open anything else."
       : "The audit opens the profile file, the lists of your posts, and the photos and videos those lists name. It cannot open anything else.";
   }
+
+  // The family card: what a caller might know, as fixed category lines. Never
+  // a value, so a printed card that is lost gives nothing away.
+  const knows = body.caller_knows || [];
+  $("caller-block").hidden = !knows.length;
+  $("caller-list").replaceChildren(...knows.map((line) => el("li", {}, line)));
 
   $("sent-line").textContent = body.sent_to_cloud
     ? "This summary was sent to the online wording service. It holds categories and counts only."
@@ -397,6 +406,8 @@ async function forgetRun() {
   if (auditId) await fetch(`/api/audits/${auditId}`, { method: "DELETE" });
   auditId = null; recorded = null; location.hash = "";
   clearPreview();
+  $("caller-block").hidden = true;
+  $("caller-list").replaceChildren();
   $("pick").reset();
   $("rec-state").textContent = "";
   $("payload-box").hidden = true;

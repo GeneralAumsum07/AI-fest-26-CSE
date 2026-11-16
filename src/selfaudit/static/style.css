@@ -170,8 +170,8 @@ menu{display:flex;justify-content:flex-end;gap:10px;padding:0;margin:25px 0 0}
 @media(max-width:780px){main{padding-top:35px}.start-layout{grid-template-columns:1fr;gap:0}.intro{display:contents}.intro h1 br{display:none}.intro h1{max-width:500px}.intro .lead{max-width:650px}.upload-panel{max-width:100%;grid-row:5;margin-bottom:30px}.scope-panel{gap:30px}.journey{font-size:13px;gap:18px;margin:22px 0 28px}.report-layout{grid-template-columns:1fr}.report-sidebar{display:grid;grid-template-columns:1fr 1fr;gap:18px}.privacy-panel{margin-top:0}.report-head h1{font-size:36px}.safety-heading{flex-wrap:wrap}.print-card{margin-left:54px}.safety-card ol{gap:14px 30px}.app-footer{font-size:11px}}
 @media(max-width:480px){.header-inner{padding:0 20px}.app-header{height:75px}.brand{font-size:23px}.brand-sub{font-size:10px}.brand-mark{width:34px;height:38px}.local-status{font-size:11px;gap:5px}.local-status .icon{width:13px}main{padding:30px 20px 20px}h1{font-size:42px;letter-spacing:-1.4px}.lead{font-size:16px}.journey{gap:13px;font-size:11px}.journey li{gap:5px}.journey li span{width:20px;height:20px;font-size:10px}.scope-panel{gap:18px}.scope-panel h2{font-size:13px;gap:5px}.scope-panel h2 .icon{width:14px}.scope-list li{font-size:13px}.upload-panel .panel-heading{padding:22px 20px}.panel-heading h2{font-size:21px}#pick{padding:0 20px 20px}.safety-card{margin-top:35px}.safety-heading{gap:11px}.safety-heading h2{font-size:18px}.safety-heading p{font-size:13px;max-width:260px}.safety-heading>.panel-icon{display:none}.print-card{margin-left:0}.safety-card ol{grid-template-columns:1fr;gap:13px}.app-footer{flex-direction:column;gap:4px}.report-head{align-items:start;flex-direction:column;gap:15px}.report-head h1{font-size:36px}.report-sidebar{grid-template-columns:1fr}.recipe,.group,.fix-panel{padding:20px}.recipe-heading{gap:10px}.recipe-heading h3{font-size:20px}.recipe .finding{gap:10px;font-size:13px}.recipe .finding .link{font-size:11px}.state-panel{padding:30px 18px;margin:10px auto 40px}.state-panel h1{font-size:32px}.progress-steps{font-size:11px}.report-summary{font-size:16px}}
 @media(prefers-reduced-motion:reduce){html{scroll-behavior:auto}*,*::before,*::after{transition:none!important}}
-/* Only the generic family card is printable; findings never enter the printout. */
-@media print{@page{margin:20mm}body{background:#fff;color:#000;font-size:12pt}.app-header,.view,.app-footer,dialog,.skip-link,.print-card{display:none!important}main{padding:0;max-width:none}.safety-card{margin:0;padding:0;border:0}.safety-heading .panel-icon{display:none}.safety-heading h2{font-size:23pt}.safety-heading p{font-size:12pt}.safety-card ol{display:block;padding-left:20px;font-size:12pt;color:#222}.safety-card li{max-width:none;margin:20px 0}.safety-card strong{color:#000}}
+/* Only the family card is printable. Its caller block names categories, never a finding's value. */
+@media print{@page{margin:20mm}body{background:#fff;color:#000;font-size:12pt}.app-header,.view,.app-footer,dialog,.skip-link,.print-card{display:none!important}main{padding:0;max-width:none}.safety-card{margin:0;padding:0;border:0}.safety-heading .panel-icon{display:none}.safety-heading h2{font-size:23pt}.safety-heading p{font-size:12pt}.safety-card ol{display:block;padding-left:20px;font-size:12pt;color:#222}.safety-card li{max-width:none;margin:20px 0}.safety-card strong{color:#000}.caller-block{border:1px solid #000;margin-top:24px}.caller-block h3{font-size:14pt}.caller-block ul{font-size:12pt}}
 
 /* "Try a fix" preview. Dashed border: a preview must never be mistaken for the real report. */
 .preview-banner { display: flex; gap: 1rem; align-items: center; justify-content: space-between;
@@ -197,3 +197,12 @@ menu{display:flex;justify-content:flex-end;gap:10px;padding:0;margin:25px 0 0}
 .access-list dt { margin: 0; }
 .access-list dd { margin: 0; text-align: right; font-variant-numeric: tabular-nums; font-weight: 600; }
 .access-list .sub { padding-left: 14px; font-weight: 400; color: #5b6862; }
+
+/* D1: numbered next steps under the ID card's advice. */
+.next-steps { margin: 6px 0 10px; padding-left: 22px; font-size: 14px; }
+.next-steps li { margin: 4px 0; }
+
+/* D2: what a caller might know, on the family card. */
+.caller-block { margin-top: 22px; padding: 14px 18px; border: 1px solid var(--line); border-radius: 8px; }
+.caller-block h3 { margin: 0 0 8px; font-size: 15px; }
+.caller-block ul { margin: 0; padding-left: 20px; color: var(--muted); font-size: 13px; }
