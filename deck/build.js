@@ -112,7 +112,7 @@ async function fitW(file, w) {
     s.addText("AI-FEST 2026  ·  CSE  ·  DIGITAL IDENTITY THEFT", { x: MX, y: 0.6, w: 7, h: 0.3,
       fontSize: 11, color: C.accent5, charSpacing: 3, margin: 0, isTextBox: true });
     s.addText("Exposure Self-Audit", { placeholder: "title" });
-    s.addText("Find what a stranger could build from your Instagram or YouTube, and which posts to change before they do.",
+    s.addText("Find what a stranger could build from your Instagram, YouTube, LinkedIn or Reddit, and which posts to change before they do.",
       { x: MX, y: 3.35, w: 6.4, h: 1.2, fontSize: 19, color: "C9C4B8", margin: 0, valign: "top", isTextBox: true });
     s.addText([
       { text: "Runs on your laptop.", options: { bold: true, color: C.background1 } },
@@ -138,7 +138,7 @@ async function fitW(file, w) {
       fontSize: 13, color: C.background1, valign: "middle", margin: 0, isTextBox: true,
       hyperlink: { url: REPO } });
     s.addNotes(
-      "One line: this is a check a student runs on their own Instagram or YouTube export before a scammer does the same research. YouTube has passed a real-model end-to-end browser test on a synthetic Takeout archive; real Takeout compatibility is still unverified.\n" +
+      "One line: this is a check a student runs on their own Instagram, YouTube, LinkedIn or Reddit export before a scammer does the same research. YouTube has passed a real-model end-to-end browser test on a synthetic Takeout archive; real Takeout compatibility is still unverified.\n" +
       "Point at the post: the black bars are what the tool finds. Each one is tagged with the scam it feeds: R1 is a voice-clone call to the family, R3 is a loan or SIM in your name.\n" +
       "Everything in this deck and the demo is synthetic data.");
   }
@@ -204,7 +204,7 @@ async function fitW(file, w) {
     s.addText("Three independent readers, then rules that no model gets to decide.", { placeholder: "title" });
     const d = await fitW(A("pipeline_t.png"), W - 2 * MX);
     s.addImage({ path: A("pipeline_t.png"), x: MX, y: 1.85, w: d.w, h: d.h,
-      altText: "Pipeline: Instagram or YouTube export, allowlisted reader, three readers (vision model, rules and text readers, voice), grounding, attack recipes R1 to R3, ranked fixes and a plain report." });
+      altText: "Pipeline: Instagram, YouTube, LinkedIn or Reddit export, allowlisted reader, three readers (vision model, rules and text readers, voice), grounding, attack recipes R1 to R3, ranked fixes and a plain report." });
 
     const points = [
       ["cpu", "Fits an 8 GB laptop GPU", "one model loaded at a time: vision is unloaded before the speaker model starts"],
@@ -223,7 +223,7 @@ async function fitW(file, w) {
         margin: 0, valign: "top", isTextBox: true });
     }
     s.addNotes(
-      "Order: Instagram or YouTube export ZIP, platform-specific allowlisted reader, keyframes and audio, vision model on every image, caption reader, unload, rules layer (Presidio + checksums + lexicon), grounding, ingredients, recipes R1 to R3, ranked fixes, redacted wording. YouTube titles and descriptions enter the caption path; its uploaded videos enter the same frame and audio readers.\n" +
+      "Order: Instagram or YouTube export ZIP, platform-specific allowlisted reader, keyframes and audio, vision model on every image, caption reader, unload, rules layer (Presidio + checksums + lexicon), grounding, ingredients, recipes R1 to R3, ranked fixes, redacted wording. YouTube titles and descriptions enter the caption path; its uploaded videos enter the same frame and audio readers. LinkedIn and Reddit exports hold no photos, so their posts, comments and the LinkedIn profile enter the caption path only.\n" +
       "Qwen3.5 4B via Ollama reads documents and scenes. GLiNER finds names in captions on the CPU. Silero VAD finds speech; SpeechBrain ECAPA checks it is your voice against one enrol sentence.\n" +
       "Grounding: a name or number the model claims must appear in the post's own text or it is dropped. Two readers agreeing is 'confirmed', one is 'likely', none goes to 'Not sure'.\n" +
       "Recipes are data, not model output: three recipes, ten level rules in one function.");
@@ -394,8 +394,8 @@ async function fitW(file, w) {
     kicker(s, "04  PRIVACY AND MISUSE");
     s.addText("A tool about leaks that does not leak, and does not help the attacker.", { placeholder: "title" });
     const rows = [
-      ["book-open", "Read", "Instagram profile and media indexes; YouTube channel and video metadata; allowed photos and videos."],
-      ["ban", "Never opened", "Messages, contacts, searches, ad data; YouTube history, comments and subscriptions."],
+      ["book-open", "Read", "Instagram and YouTube profile, post indexes and allowed media; LinkedIn profile, jobs, education and posts; Reddit posts and comments."],
+      ["ban", "Never opened", "Messages, contacts, searches, ad data; YouTube history; account email and phone; Reddit votes and IP logs."],
       ["trash-2", "Kept", "Nothing. The temp folder is wiped on exit; the voice clip stays in memory."],
       ["wifi-off", "Sent", "Nothing by default. If online wording is switched on, only a redacted payload, shown in the app first. The server listens on loopback only."],
     ];
@@ -471,7 +471,7 @@ async function fitW(file, w) {
       "Tested on synthetic data; intervals are wide.",
       "Voice thresholds are heuristics.",
       "A 4B model misreads digits (checksums catch most).",
-      "YouTube passed the synthetic end-to-end check; real Takeout compatibility is unverified.",
+      "YouTube, LinkedIn and Reddit checked end to end on synthetic exports only; real export formats are unverified.",
     ];
     s.addText(limits.map((l, i) => ({ text: l, options: { bullet: true, breakLine: i < limits.length - 1 } })),
       { x: rx, y: ly + 0.4, w: rw, h: 2.0, fontSize: 12.5, color: C.text1, margin: 0, valign: "top",
@@ -532,7 +532,7 @@ async function fitW(file, w) {
   {
     const s = slide("Next");
     kicker(s, "06  WHAT'S NEXT");
-    s.addText("Next: more platforms, one export reader each.", { placeholder: "title" });
+    s.addText("Four platforms built, one export reader each.", { placeholder: "title" });
 
     // Left: one row per platform group. The status chip reuses the risk-chip
     // shape and palette from slide 5, so "built / next / later / no" reads in
@@ -541,8 +541,10 @@ async function fitW(file, w) {
       // Synthetic end-to-end verification does not establish real-export
       // compatibility or replace a held-out accuracy evaluation.
       ["BUILT", HEX.safe, true, "Instagram, YouTube", "Both verified end to end with real models on synthetic data. YouTube: real Takeout compatibility and held-out accuracy still unverified."],
-      ["NEXT", HEX.med, true, "LinkedIn", "A new export reader and allowlist. The photo, text and voice readers, recipes and report are reused."],
-      ["LATER", HEX.muted, false, "Reddit", "Mostly text. Comment history can give away a city or a college."],
+      // Built 16 November 2026 (src/selfaudit/ingest/textexports.py). Their
+      // exports hold no photos, so only the caption path runs; the receipt,
+      // recipes and report are reused unchanged.
+      ["BUILT", HEX.safe, true, "LinkedIn, Reddit", "Text only: their exports hold no photos. Checked live with real models on synthetic exports; some column names in a real export are unconfirmed."],
       ["NO", HEX.high, false, "Discord, Snapchat", "Mostly private messages, and the app never reads messages."],
     ];
     for (let i = 0; i < rows.length; i++) {
@@ -581,7 +583,7 @@ async function fitW(file, w) {
     s.addText("Not built yet.", { x: px + 0.35, y: 6.05, w: pw - 0.7, h: 0.35, fontSize: 11, italic: true, color: C.accent5,
       margin: 0, isTextBox: true });
     s.addNotes(
-      "Instagram and YouTube are built and verified end to end with real local models on synthetic data. YouTube's 16 November 2026 browser check verified upload, video and speech decoding, model inference, report rendering, exclusions, redaction, feedback and deletion. The Takeout layout is still guessed and has not been checked against a real archive; YouTube has not had a held-out accuracy evaluation. Videos marked private or unlisted are skipped; missing or unknown visibility is included. Everything else on this slide is a plan.\n" +
+      "Instagram and YouTube are built and verified end to end with real local models on synthetic data. LinkedIn and Reddit were added on 16 November 2026 as text-only readers (their exports carry no photos) and checked live with the real models on synthetic exports: the Reddit demo found an Aadhaar number and a family word; the LinkedIn demo found the phone number in the About section and the fix pointed at the profile, not a post. Their Shares.csv and comments.csv headers come from third-party parsers and are unconfirmed. YouTube's 16 November 2026 browser check verified upload, video and speech decoding, model inference, report rendering, exclusions, redaction, feedback and deletion. The Takeout layout is still guessed and has not been checked against a real archive; YouTube has not had a held-out accuracy evaluation. Videos marked private or unlisted are skipped; missing or unknown visibility is included. Everything else on this slide is a plan.\n" +
       "Why one reader per platform: each export has its own format and its own private parts, so the 'never opens your messages' allowlist is rebuilt per platform. The models, recipes and report do not change.\n" +
       "Why not just paste a link: anyone could paste anyone's link, which turns a self-audit into reconnaissance on strangers. Proving ownership first is what keeps it a self-audit.\n" +
       "API access per platform still needs checking before building; Instagram's API, for example, covers business and creator accounts only.");
