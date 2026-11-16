@@ -172,3 +172,11 @@ menu{display:flex;justify-content:flex-end;gap:10px;padding:0;margin:25px 0 0}
 @media(prefers-reduced-motion:reduce){html{scroll-behavior:auto}*,*::before,*::after{transition:none!important}}
 /* Only the generic family card is printable; findings never enter the printout. */
 @media print{@page{margin:20mm}body{background:#fff;color:#000;font-size:12pt}.app-header,.view,.app-footer,dialog,.skip-link,.print-card{display:none!important}main{padding:0;max-width:none}.safety-card{margin:0;padding:0;border:0}.safety-heading .panel-icon{display:none}.safety-heading h2{font-size:23pt}.safety-heading p{font-size:12pt}.safety-card ol{display:block;padding-left:20px;font-size:12pt;color:#222}.safety-card li{max-width:none;margin:20px 0}.safety-card strong{color:#000}}
+
+/* "Try a fix" preview. Dashed border: a preview must never be mistaken for the real report. */
+.preview-banner { display: flex; gap: 1rem; align-items: center; justify-content: space-between;
+  border: 2px dashed currentColor; }
+.preview-banner p { margin: 0; }
+.recipe.ended { opacity: .55; }
+.level.ended { background: transparent; border: 1px solid currentColor; }
+.try-fix { display: inline-flex; gap: .35rem; align-items: center; margin-left: .5rem; font-size: .9em; cursor: pointer; }

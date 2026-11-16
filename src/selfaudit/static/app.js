@@ -7,6 +7,12 @@ const $ = (id) => document.getElementById(id);
 let auditId = null;
 let recorded = null;          // a Blob from the microphone, if the user recorded one
 let missedPost = null;        // the post the "You missed something" dialog is about
+// "Try a fix": which fixes are ticked (positions in the current report's fix
+// list) and the server's answer for them. Both are page state only; the audit
+// on the server never changes, so clearing them restores the real report.
+let lastBody = null;
+let tried = new Set();
+let preview = null;          // {recipes, text} from POST /preview, or null
 
 // Words, not codes. Bands only: the report never shows a score or a percentage.
 const LEVEL = { high: "High", medium: "Medium", low: "Low" };
@@ -88,7 +94,12 @@ function findingLine(f) {
 }
 
 function render(body) {
+  lastBody = body;
   const r = body.report, t = body.text;
+  // In a preview the cards show the "after" levels, worded by the same server
+  // path as the real report; everything else on the page stays the real report.
+  const after = preview ? Object.fromEntries(preview.recipes.map((p) => [p.recipe_id, p])) : null;
+  const pt = preview ? preview.text : t;
   // YouTube has no private account, only private videos, and calls items videos.
   const youtube = r.platform === "youtube";
   const item = youtube ? "video" : "post";
@@ -97,7 +108,10 @@ function render(body) {
   // Same item word as the fix text and the chips, so one screen never says both "post" and "video".
   $("counts").textContent = `${r.posts_read} ${item}${r.posts_read === 1 ? "" : "s"} analysed · ` +
     `${nCouldnt} item${nCouldnt === 1 ? "" : "s"} excluded or unavailable`;
-  $("summary").textContent = t.summary;
+  $("summary").textContent = pt.summary;
+  $("preview-banner").hidden = !preview;
+  $("preview-text").textContent = "Preview. This shows your report after the changes you ticked. " +
+    `Nothing has been changed on ${youtube ? "YouTube" : "Instagram"}. You still need to make these changes yourself.`;
   $("voice-note").hidden = !body.voice_note;
   $("voice-note").textContent = body.voice_note || "";
   $("private-banner").hidden = !r.is_private;
@@ -108,8 +122,22 @@ function render(body) {
   box.replaceChildren();
   for (const rec of r.recipes) {
     if (!rec.level && !rec.not_sure) continue;
-    const words = t.recipes[rec.recipe_id] || { title: rec.recipe_id, reasons: "", advice: "" };
-    const lvl = rec.not_sure ? ["unsure", "Needs review"] : [rec.level, LEVEL[rec.level]];
+    // Cards stay in the real report's order during a preview, so a judge can
+    // see the same card change rather than the list reshuffling under them.
+    const now = after ? after[rec.recipe_id] : rec;
+    const gone = after && (!now || (!now.level && !now.not_sure));
+    const words = (!gone && pt.recipes[rec.recipe_id]) || t.recipes[rec.recipe_id] ||
+      { title: rec.recipe_id, reasons: "", advice: "" };
+    const band = (x) => (x.not_sure ? "Needs review" : LEVEL[x.level]);
+    let lvl = rec.not_sure ? ["unsure", "Needs review"] : [rec.level, LEVEL[rec.level]];
+    if (gone) lvl = ["ended", `${band(rec)} → None`];
+    else if (after && band(now) !== band(rec)) lvl = [now.not_sure ? "unsure" : now.level, `${band(rec)} → ${band(now)}`];
+    if (gone) {
+      box.append(el("article", { class: "recipe ended" },
+        el("div", { class: "recipe-heading" }, el("h3", {}, words.title), el("span", { class: "level ended" }, lvl[1])),
+        el("p", {}, "No longer possible with these changes.")));
+      continue;
+    }
     const { findings, posts: looked } = recipePosts(rec, r);
     const btn = el("button", { class: "link", type: "button" },
       looked.length === 1 ? `See the ${item}` : `See the ${looked.length} ${item}s`);
@@ -143,7 +171,13 @@ function render(body) {
     // The list supplies its own accessible numbering. Strip the plain-text
     // prefix used by offline templates to avoid rendering each rank twice.
     const text = (t.fixes[i] || `${fx.action} ${fx.post_ids.map(postName).join(", ")}`).replace(/^\d+\.\s*/, "");
-    fixes.append(el("li", {}, text, " ", btn));
+    // "Try this" asks the server what the report would say after the fix;
+    // nothing is changed on the platform or in the audit.
+    const box = el("input", { type: "checkbox", id: `try-${i}` });
+    box.checked = tried.has(i);
+    box.addEventListener("change", () => { box.checked ? tried.add(i) : tried.delete(i); runPreview(); });
+    fixes.append(el("li", {}, text, " ", btn,
+      el("label", { class: "try-fix", for: `try-${i}` }, box, "Try this")));
   });
   if (!r.fixes.length) fixes.append(el("li", { class: "note" }, "Nothing to fix first."));
 
@@ -163,7 +197,25 @@ function fill(id, items, line) {
   $(`${id}-group`).hidden = !items.length;
 }
 
+async function runPreview() {
+  const runId = auditId;
+  if (!tried.size) { preview = null; render(lastBody); return; }
+  const res = await fetch(`/api/audits/${runId}/preview`, {
+    method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ fixes: [...tried] }) });
+  if (runId !== auditId) return;
+  // On any error fall back to the real report rather than a stale preview.
+  preview = res.ok ? await res.json() : null;
+  if (!preview) tried.clear();
+  render(lastBody);
+}
+
+function clearPreview() { tried = new Set(); preview = null; }
+$("clear-preview").addEventListener("click", () => { clearPreview(); render(lastBody); });
+
 async function feedback(body) {
+  // Feedback re-ranks the fixes, so ticked positions would point at different
+  // fixes afterwards: drop the preview first.
+  clearPreview();
   const res = await fetch(`/api/audits/${auditId}/feedback`, {
     method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify(body) });
   if (res.ok) render(await res.json());   // the report updates in place, no reload
@@ -198,6 +250,7 @@ async function poll() {
     if (!reportResponse.ok) throw new Error("The report could not be loaded. Choose the export again to retry.");
     const body = await reportResponse.json();
     if (runId !== auditId) return;
+    clearPreview();
     render(body);
     show("report");
   } catch (error) {
@@ -282,6 +335,7 @@ $("left").addEventListener("click", async () => {
 async function forgetRun() {
   if (auditId) await fetch(`/api/audits/${auditId}`, { method: "DELETE" });
   auditId = null; recorded = null; location.hash = "";
+  clearPreview();
   $("pick").reset();
   $("rec-state").textContent = "";
   $("payload-box").hidden = true;

@@ -180,3 +180,34 @@ def test_delete_wipes_the_run(client, finished_id):
 
 def test_the_server_only_ever_binds_loopback():
     assert HOST == "127.0.0.1"
+
+
+def test_preview_shows_the_report_after_ticked_fixes_and_changes_nothing(client, finished_id):
+    before = client.get(f"/api/audits/{finished_id}/report").json()
+    res = client.post(f"/api/audits/{finished_id}/preview", json={"fixes": [0]})
+    assert res.status_code == 200
+    out = res.json()
+    real = {r["recipe_id"]: r["level"] for r in before["report"]["recipes"]}
+    now = {r["recipe_id"]: r["level"] for r in out["recipes"]}
+    assert now != real                       # the top fix ends or lowers something
+    assert out["text"]["recipes"]            # worded the same way as the report
+    # A preview is not feedback: the stored audit is untouched.
+    assert client.get(f"/api/audits/{finished_id}/report").json()["report"] == before["report"]
+
+
+def test_preview_of_nothing_is_the_real_report(client, finished_id):
+    before = client.get(f"/api/audits/{finished_id}/report").json()["report"]["recipes"]
+    assert client.post(f"/api/audits/{finished_id}/preview", json={"fixes": []}).json()["recipes"] == before
+
+
+def test_preview_rejects_unknown_fix_numbers(client, finished_id):
+    for bad in ([99], [-1], ["x"], [0, 0]):
+        assert client.post(f"/api/audits/{finished_id}/preview", json={"fixes": bad}).status_code == 422
+
+
+def test_preview_serves_nothing_extracted(client, finished_id):
+    from pipeline_fakes import AADHAAR
+    n = len(client.get(f"/api/audits/{finished_id}/report").json()["report"]["fixes"])
+    served = client.post(f"/api/audits/{finished_id}/preview", json={"fixes": list(range(n))}).text
+    for secret in (AADHAAR.replace(" ", "")[:4], "Amma", "Mahindra"):
+        assert secret not in served

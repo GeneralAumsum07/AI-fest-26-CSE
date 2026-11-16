@@ -121,3 +121,30 @@ def test_a_photographed_detail_is_cropped_not_captioned(scenario):
     findings, voice, profile = scenario(institution_posts=["p4"])
     findings = [f.model_copy(update={"supports": ["vision"]}) for f in findings]
     assert [f.action for f in candidate_fixes(findings, voice, profile)] == ["crop"]
+
+
+# --- Feature A: "Try a fix" preview ---
+
+def test_preview_of_one_fix_matches_what_the_ranker_scored(high_state):
+    # The preview must show exactly the "after" the ranker scored, or ticking a
+    # fix would promise something different from what the fix list said.
+    from selfaudit.fixes import _apply, _recipes, preview
+    s = high_state
+    fix = s.report().fixes[0]
+    f2, v2 = _apply(fix, s.findings, s.voice)
+    assert preview(s.findings, s.voice, s.profile, [fix]) == _recipes(f2, v2, s.profile)
+
+
+def test_preview_of_no_fixes_is_the_real_report(high_state):
+    from selfaudit.fixes import preview
+    s = high_state
+    assert preview(s.findings, s.voice, s.profile, []) == s.report().recipes
+
+
+def test_preview_never_raises_a_level(high_state):
+    from selfaudit.fixes import preview
+    s = high_state
+    rep = s.report()
+    after = {r.recipe_id: r.level for r in preview(s.findings, s.voice, s.profile, rep.fixes)}
+    for r in rep.recipes:
+        assert LEVEL_RANK[after.get(r.recipe_id)] <= LEVEL_RANK[r.level]

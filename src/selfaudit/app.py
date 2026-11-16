@@ -22,6 +22,7 @@ from fastapi.responses import FileResponse
 from fastapi.staticfiles import StaticFiles
 from pydantic import BaseModel
 
+from selfaudit.fixes import preview as preview_fixes
 from selfaudit.ingest.export import NotAnExport, open_export
 from selfaudit.models import Category, Report
 from selfaudit.perceive.video import MediaError, extract_audio, keyframes
@@ -88,6 +89,12 @@ def _remove(folder: Path) -> None:
     shutil.rmtree(folder, ignore_errors=True)
     if not folder.exists():
         _TEMP_DIRS.discard(folder)
+
+
+class Preview(BaseModel):
+    # Positions in the current report's fix list, not fix contents: the page
+    # cannot invent a fix, only pick from the ones the server ranked.
+    fixes: list[int]
 
 
 class Feedback(BaseModel):
@@ -204,6 +211,30 @@ def create_app(make_backends: Callable[[], AllBackends], call_llm: Callable[[str
             else:
                 raise HTTPException(422)
             return _report_body(run, rep)
+
+    @app.post("/api/audits/{id_}/preview")
+    def preview(id_: str, body: Preview) -> dict:
+        """The report as it would read after the ticked fixes. Read-only.
+
+        Unlike /feedback this never touches run.state: a preview is a
+        question ("what if?"), not a correction, so the next GET /report is
+        the real report again. Nothing on the platform changes either; the
+        page says so in its banner."""
+        run = _finished(id_)
+        with run.lock:
+            state = run.state
+            report = state.report()
+            idx = body.fixes
+            # Bad or repeated numbers are refused rather than clamped: a
+            # silently ignored tick would show a preview the user didn't ask for.
+            if len(set(idx)) != len(idx) or any(not 0 <= i < len(report.fixes) for i in idx):
+                raise HTTPException(422, "unknown fix")
+            after = preview_fixes(state.findings, state.voice, state.profile, [report.fixes[i] for i in idx])
+            # Same wording path as the real report (and the same leak check),
+            # so a previewed card reads exactly like a real one.
+            text, _ = word_report(build_payload(report.model_copy(update={"recipes": after}), state.profile),
+                                  state.secrets(), call_llm=call_llm)
+            return {"recipes": [r.model_dump(mode="json") for r in after], "text": text.model_dump()}
 
     @app.get("/api/audits/{id_}/payload")
     def payload(id_: str) -> dict:

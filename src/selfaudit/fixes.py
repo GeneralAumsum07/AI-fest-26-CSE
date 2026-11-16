@@ -64,6 +64,20 @@ def _apply(fix: Fix, findings: list[Finding], voice: VoiceResult) -> tuple[list[
     return [f for f in findings if not (f.post_id in posts and f.category in targets)], voice
 
 
+def preview(findings: list[Finding], voice: VoiceResult, profile: Profile, chosen: list[Fix]) -> list[RecipeResult]:
+    """The recipes as they would be after the user makes every chosen fix.
+
+    "Try a fix" on the page. It reuses _apply and _recipes, the same two calls
+    rank_fixes scores with, so a ticked fix shows exactly the "after" the
+    ranker promised; a second "what if" model could quietly disagree with it.
+    Fixes are applied one after another because the ranked list is itself
+    cumulative (fix 2 was scored on the world after fix 1). Works on copies:
+    _apply returns new lists, so the audit itself is never changed."""
+    for fix in chosen:
+        findings, voice = _apply(fix, findings, voice)
+    return _recipes(findings, voice, profile)
+
+
 def _diff(before: list[RecipeResult], after: list[RecipeResult]) -> tuple[list[str], list[str]]:
     now = {r.recipe_id: r.level for r in after}
     ends, weakens = [], []
