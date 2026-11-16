@@ -59,7 +59,7 @@ Recipes are data, not model output: three recipes, ten level rules in one functi
 | | |
 |---|---|
 | Read | Profile info, posts/stories/reels indexes, the media they reference |
-| Never opened | Messages, contacts, searches, ad data |
+| Never opened | Messages, contacts, searches, ad data; on LinkedIn the account email and phone; on Reddit votes, saves and IP logs (posts are read without their IP column) |
 | Kept | Nothing. Temp folder wiped on exit; the voice clip stays in memory |
 | Sent | Only the redacted payload, only if online wording is on, viewable in the app. The server listens on loopback only |
 
@@ -74,7 +74,7 @@ Misuse: needs the owner's own export (no username or scraping path); outputs fix
   - Synthetic test data and a small set with wide intervals.
   - Voice thresholds are heuristics.
   - A 4B model misreads digits.
-  - Instagram only.
+  - Four platforms: Instagram and YouTube (photos, video, voice); LinkedIn and Reddit (text only, since their exports hold no photos). LinkedIn and Reddit are tested on synthetic exports only, and some of their column names are unconfirmed.
   - The export format can change.
 - Credits:
   - Models: Qwen3.5 (Alibaba, Apache-2.0), GLiNER PII (Apache-2.0), SpeechBrain ECAPA (Apache-2.0), Silero VAD.

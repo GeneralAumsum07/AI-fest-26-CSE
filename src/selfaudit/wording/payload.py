@@ -47,7 +47,11 @@ class WordingPayload(BaseModel):
     # Which export the report is about, so fix wording can use that platform's
     # own actions (YouTube has no "archive"). A fixed literal: it cannot carry
     # anything personal, so the payload stays categories and counts only.
-    platform: Literal["instagram", "youtube"] = "instagram"
+    platform: Literal["instagram", "youtube", "linkedin", "reddit"] = "instagram"
+    # LinkedIn only: which ordinal is the profile itself (headline, about,
+    # experience) rather than a post, so its fix says "your profile" and never
+    # "Delete post 2". A bounded number, 0 for none: no room for anything personal.
+    profile_post: int = Field(0, ge=0, le=9999)
 
 
 class LeakError(Exception):
@@ -83,7 +87,13 @@ def post_ordinals(profile: Profile) -> dict[str, int]:
     The one numbering the user sees everywhere: the fix text ("post 8") and the
     page's labels must agree, and newest-first matches scrolling the grid.
     """
-    return {p.post_id: n for n, p in enumerate(profile.posts, start=1)}
+    # The LinkedIn profile ("profile-0001", ingest/textexports.py) is not a
+    # post the user can scroll to, so it is numbered after every real post:
+    # the posts then count 1, 2, 3 with no gap, and the profile's own number
+    # is only ever shown as "your profile" (templates.PROFILE_ACTION, app.py).
+    posts = [p for p in profile.posts if p.post_id != "profile-0001"]
+    posts += [p for p in profile.posts if p.post_id == "profile-0001"]
+    return {p.post_id: n for n, p in enumerate(posts, start=1)}
 
 
 def build_payload(report: Report, profile: Profile, language: str = "en") -> WordingPayload:
@@ -91,8 +101,11 @@ def build_payload(report: Report, profile: Profile, language: str = "en") -> Wor
     recipes = []
     for r in report.recipes:
         has = [t for c in r.has if (t := _token(c, band, with_band=True))]
-        if r.recipe_id == "R2":
-            has.append("name")  # the profile-name slot is always filled; see recipes.NAME
+        # The profile-name slot counts only when there is a name (the same
+        # two-letter test as recipes._slot_conf). Reddit exports have none, so
+        # the text must not claim "your name on your profile" there.
+        if r.recipe_id == "R2" and sum(ch.isalpha() for ch in profile.name) >= 2:
+            has.append("name")
         # Amplifiers ride in `has`: they are things the attacker has, just
         # things that make the scam easier rather than possible.
         has += [t for c in r.amplifiers if (t := _token(c, band, with_band=True))]
@@ -109,7 +122,9 @@ def build_payload(report: Report, profile: Profile, language: str = "en") -> Wor
                                 effects=[f"ends {r}" for r in f.ends] + [f"weakens {r}" for r in f.weakens]))
     return WordingPayload(recipes=recipes, fixes=fixes, language=language if language in ("en", "hi", "te") else "en",
                           private=profile.is_private, couldnt_check=len(report.couldnt_check),
-                          platform=profile.platform)
+                          platform=profile.platform,
+                          # "profile-0001" is the LinkedIn reader's id for the profile (ingest/textexports.py).
+                          profile_post=order.get("profile-0001", 0))
 
 
 def leaks(text: str, secrets: set[str]) -> bool:

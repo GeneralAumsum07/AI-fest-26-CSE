@@ -16,7 +16,7 @@ from datetime import datetime, timezone
 from pathlib import Path
 
 from selfaudit.devtools.persona import REELS_FILE, REELS_KEY
-from selfaudit.ingest import youtube
+from selfaudit.ingest import textexports, youtube
 from selfaudit.ingest.errors import NotAnExport  # re-exported: callers import it from here
 from selfaudit.ingest.textfix import repair
 from selfaudit.models import MediaItem, Post, Profile, Skipped
@@ -60,6 +60,9 @@ class ExportSource:
         # Which reader applies, decided once from the listing. None = Instagram.
         # The YouTube root also decides what read_index will let through.
         self.youtube_root = youtube.youtube_root(self.names)
+        # LinkedIn and Reddit are flat CSV folders; checked only when this is
+        # not YouTube, and their allowlist is exact root-level file names.
+        self.text_platform = None if self.youtube_root is not None else textexports.detect(self.names)
 
     @staticmethod
     def _wrapper(names: list[str]) -> str:
@@ -86,6 +89,11 @@ class ExportSource:
         if self.youtube_root is not None:
             # A YouTube export gets the YouTube allowlist only: two CSV folders.
             if not youtube.index_allowed(self.youtube_root, name):
+                raise PermissionError(f"not an allowlisted index: {name}")
+            return youtube.parse_table(self._read(name))
+        if self.text_platform is not None:
+            # A LinkedIn or Reddit export gets its own short list of CSVs only.
+            if not textexports.index_allowed(self.text_platform, name):
                 raise PermissionError(f"not an allowlisted index: {name}")
             return youtube.parse_table(self._read(name))
         folder, base = posixpath.split(name)
@@ -179,6 +187,14 @@ def load_profile(
 
     if src.youtube_root is not None:
         profile, posts = youtube.load_youtube(src, src.youtube_root)
+        posts, not_checked = _cap(posts, max_items)
+        return profile.model_copy(update={"posts": posts, "not_checked": not_checked})
+
+    if src.text_platform is not None:
+        load = textexports.load_linkedin if src.text_platform == "linkedin" else textexports.load_reddit
+        profile, posts = load(src)
+        # Text posts have no media, so the media cap keeps them all; it is
+        # applied anyway so every reader goes through the same gate.
         posts, not_checked = _cap(posts, max_items)
         return profile.model_copy(update={"posts": posts, "not_checked": not_checked})
 

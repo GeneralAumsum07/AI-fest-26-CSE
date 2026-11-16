@@ -46,7 +46,8 @@ ERRORS = {
     "html_export": "This looks like an Instagram export in HTML. Request it again and choose JSON.",
     "multi_part": "This export came in several files. Unzip them all into one folder, zip that folder, and pick it.",
     # Names both readers so the user can tell which kind of file was expected.
-    "missing_files": "No supported Instagram or YouTube export files were found. Check the ZIP and try again.",
+    "missing_files": "No supported Instagram, YouTube, LinkedIn or Reddit export files were found. "
+                     "Check the ZIP and try again.",
 }
 GENERIC_ERROR = "Something went wrong while reading this export. Nothing was sent anywhere."
 
@@ -141,6 +142,8 @@ def create_app(make_backends: Callable[[], AllBackends], call_llm: Callable[[str
         # same post never carries two different numbers on one screen.
         word = ITEM_WORD[state.profile.platform]   # "video 2" on YouTube, as in the fix text
         labels = {pid: f"{word} {n}" for pid, n in post_ordinals(state.profile).items()}
+        if "profile-0001" in labels:
+            labels["profile-0001"] = "your profile"   # LinkedIn: the profile is not a post (templates.PROFILE_ACTION)
         return {"report": report.model_dump(mode="json"), "text": text.model_dump(), "sent_to_cloud": sent,
                 "voice_note": voice_note(report.voice), "post_labels": labels,
                 # Fixed text, outside `text` so the cloud wording never rewords an

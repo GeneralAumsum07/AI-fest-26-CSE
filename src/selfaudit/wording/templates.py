@@ -55,9 +55,21 @@ _ACTION = {
     # published video cannot be cropped, but YouTube Studio can blur part of it.
     "youtube": {"remove": "Delete {ref}", "archive": "Set {ref} to Private", "crop": "Blur the detail in {ref}",
                 "edit_caption": "Edit the title or description of {ref}"},
+    # LinkedIn and Reddit exports are text only, so "crop" is never chosen
+    # for them (fixes.py crops only what the camera saw); it still needs a
+    # value. Neither has an archive that hides a post, so it says delete.
+    "linkedin": {"remove": "Delete {ref}", "archive": "Delete {ref}", "crop": "Edit {ref} to take the detail out",
+                 "edit_caption": "Edit {ref} to take the detail out"},
+    # Reddit lets the body of a post be edited but never its title.
+    "reddit": {"remove": "Delete {ref}", "archive": "Delete {ref}", "crop": "Delete {ref}",
+               "edit_caption": "Edit {ref}, or delete it if the detail is in the title (titles cannot be edited)"},
 }
+# On LinkedIn one "post" is the profile itself; any action on it means editing it.
+PROFILE_ACTION = "Take the detail out of your profile (headline, about or experience)"
 # What the user calls one item: the page labels use the same word (app.py).
-ITEM_WORD = {"instagram": "post", "youtube": "video"}
+# Reddit comments are numbered with the posts, so "post 3" can be a comment;
+# the evidence view under each card shows its text.
+ITEM_WORD = {"instagram": "post", "youtube": "video", "linkedin": "post", "reddit": "post"}
 
 
 def _join(items: list[str]) -> str:
@@ -103,7 +115,10 @@ def render_local(payload: WordingPayload) -> ReportText:
         # post_ref is always "post N" in the payload (its pattern is the leak
         # guard); only the words shown here change per platform.
         ref = f.post_ref.replace("post", ITEM_WORD[payload.platform], 1)
-        action = _ACTION[payload.platform][f.action].format(ref=ref)
+        if payload.profile_post and f.post_ref == f"post {payload.profile_post}":
+            action = PROFILE_ACTION
+        else:
+            action = _ACTION[payload.platform][f.action].format(ref=ref)
         fixes.append(f"{f.rank}. {action}" + (f" ({'; '.join(effects)})" if effects else "") + ".")
 
     shown = [r for r in payload.recipes if r.level != "none"]

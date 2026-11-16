@@ -30,6 +30,16 @@ const REASON = {
   model_error: "the image reader failed on it", model_output: "the image reader's answer made no sense",
   out_of_memory: "the laptop ran out of memory on it", caption_error: "the caption reader failed on it",
   pattern_error: "the number checker failed on it", voice_error: "the voice check failed on it",
+  // LinkedIn and Reddit exports list a post's photo by URL only; the app never goes online to fetch it.
+  media_not_in_export: "it had a photo or video the export does not include; check that one yourself",
+};
+const PLATFORM_NAME = { instagram: "Instagram", youtube: "YouTube", linkedin: "LinkedIn", reddit: "Reddit" };
+// What the audit opens on each platform, for the privacy receipt's note.
+const ACCESS_NOTE = {
+  instagram: "The audit opens the profile file, the lists of your posts, and the photos and videos those lists name. It cannot open anything else.",
+  youtube: "The audit opens the channel file, the lists of your videos, and the videos those lists name. It cannot open anything else.",
+  linkedin: "The audit opens four files: your profile, jobs, education and posts. Messages, connections and the email and phone on your account are never opened.",
+  reddit: "The audit opens two files: your posts and your comments, without their IP addresses. Messages, chat, votes and saved items are never opened.",
 };
 const STAGE = { images: "Looking at photos and video frames", captions: "Reading captions", voice: "Listening for your voice" };
 
@@ -111,7 +121,7 @@ function render(body) {
   $("summary").textContent = pt.summary;
   $("preview-banner").hidden = !preview;
   $("preview-text").textContent = "Preview. This shows your report after the changes you ticked. " +
-    `Nothing has been changed on ${youtube ? "YouTube" : "Instagram"}. You still need to make these changes yourself.`;
+    `Nothing has been changed on ${PLATFORM_NAME[r.platform] || "Instagram"}. You still need to make these changes yourself.`;
   $("voice-note").hidden = !body.voice_note;
   $("voice-note").textContent = body.voice_note || "";
   $("private-banner").hidden = !r.is_private;
@@ -185,7 +195,9 @@ function render(body) {
   if (!r.fixes.length) fixes.append(el("li", { class: "note" }, "Nothing to fix first."));
 
   const lower = r.private_would_lower || [];
-  $("private-lower").hidden = !lower.length;
+  // LinkedIn and Reddit have no private-account switch, so the line would suggest something impossible.
+  const canGoPrivate = r.platform === "instagram" || youtube;
+  $("private-lower").hidden = !lower.length || !canGoPrivate;
   $("private-lower").textContent = (youtube ? "Setting your public videos to Private would lower: "
                                              : "Switching your account to private would lower: ") +
     lower.map((id) => (t.recipes[id] || { title: id }).title).join("; ") + ".";
@@ -201,9 +213,7 @@ function render(body) {
     $("access-list").replaceChildren(
       ...row("Files in your export", acc.total), ...row("Opened for this audit", acc.opened),
       ...row("Never opened", never), ...acc.never_opened.flatMap((g) => row(g.label, g.count, "sub")));
-    $("access-note").textContent = youtube
-      ? "The audit opens the channel file, the lists of your videos, and the videos those lists name. It cannot open anything else."
-      : "The audit opens the profile file, the lists of your posts, and the photos and videos those lists name. It cannot open anything else.";
+    $("access-note").textContent = ACCESS_NOTE[r.platform] || ACCESS_NOTE.instagram;
   }
 
   // The family card: what a caller might know, as fixed category lines. Never
@@ -290,7 +300,7 @@ async function poll() {
 function updateExportSelection() {
   const file = $("export").files[0];
   const isZip = !file || /\.zip$/i.test(file.name);
-  $("export").setCustomValidity(isZip ? "" : "Choose an Instagram or YouTube export in ZIP format.");
+  $("export").setCustomValidity(isZip ? "" : "Choose an Instagram, YouTube, LinkedIn or Reddit export in ZIP format.");
   $("export-name").textContent = file ? file.name : "Choose a ZIP file";
   $("export-detail").textContent = file ? `${(file.size / (1024 * 1024)).toFixed(1)} MB · selected on this device` : "or drag and drop it here";
   $("drop-zone").classList.toggle("has-file", Boolean(file));

@@ -25,6 +25,8 @@ percentages. Every field must be under 400 characters.
 Use neutral product wording. Do not describe the application as "I" or "we".
 Use the terms of the platform given by "platform": on YouTube say "video", not "post",
 and "set to Private" instead of "archive", and never suggest making the whole channel private.
+On LinkedIn and Reddit say "delete" instead of "archive"; the post numbered "profile_post"
+is the LinkedIn profile itself, so say "your profile" for it. Reddit titles cannot be edited.
 Return only JSON of this shape:
 {"summary": str, "recipes": {"R1": {"title": str, "reasons": str, "advice": str}, ...}, "fixes": [str, ...]}
 """

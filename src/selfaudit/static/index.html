@@ -22,7 +22,7 @@
 <section id="start" class="view">
   <div class="start-layout">
     <div class="intro">
-      <div class="platforms"><span>Instagram</span><span>YouTube</span></div>
+      <div class="platforms"><span>Instagram</span><span>YouTube</span><span>LinkedIn</span><span>Reddit</span></div>
       <h1>See what your <br>posts reveal.</h1>
       <p class="lead">Personal details can add up. Review your social media export for exposure that could enable impersonation or identity misuse, then see what to change.</p>
       <ol class="journey" aria-label="How the audit works">
@@ -34,16 +34,22 @@
           <ul class="scope-list">
             <li><strong>Instagram</strong><span>Profile details, posts, stories, reels and their media.</span></li>
             <li><strong>YouTube</strong><span>Channel details, video titles, descriptions and eligible uploads.</span></li>
+            <li><strong>LinkedIn</strong><span>Name, headline, about, jobs, education and your posts (text only).</span></li>
+            <li><strong>Reddit</strong><span>Your posts and comments, with the subreddit each was posted in (text only).</span></li>
           </ul>
         </div>
         <div>
           <h2><svg class="icon" aria-hidden="true"><use href="/static/icons.svg#eye-off"></use></svg>Excluded from the audit</h2>
-          <ul class="scope-list"><li><strong>Private activity</strong><span>Messages, contacts, searches and ad data.</span></li><li><strong>YouTube activity</strong><span>Watch history, comments, live chat, subscriptions, and videos marked private or unlisted.</span></li></ul>
+          <ul class="scope-list"><li><strong>Private activity</strong><span>Messages, contacts, searches and ad data.</span></li><li><strong>YouTube activity</strong><span>Watch history, comments, live chat, subscriptions, and videos marked private or unlisted.</span></li><li><strong>LinkedIn and Reddit activity</strong><span>Messages, connections, account email and phone, votes, saved items and IP logs.</span></li></ul>
         </div>
       </section>
       <details class="import-note">
         <summary><svg class="icon" aria-hidden="true"><use href="/static/icons.svg#info"></use></svg>About YouTube imports<svg class="icon chevron" aria-hidden="true"><use href="/static/icons.svg#chevron"></use></svg></summary>
         <p>YouTube passed an end-to-end check with real models on synthetic exports. Compatibility with a real Google Takeout archive remains unverified. Videos with missing or unreadable visibility are included and may be flagged even if private.</p>
+      </details>
+      <details class="import-note">
+        <summary><svg class="icon" aria-hidden="true"><use href="/static/icons.svg#info"></use></svg>About LinkedIn and Reddit imports<svg class="icon chevron" aria-hidden="true"><use href="/static/icons.svg#chevron"></use></svg></summary>
+        <p>Both exports are text only: photos in posts are listed by link, so they are named in the report as not checked. Tested on synthetic exports; some column names in a real export are unconfirmed. LinkedIn posts shown to connections only are included, because anyone you accept can see them.</p>
       </details>
     </div>
     <aside class="upload-panel">
@@ -55,9 +61,9 @@
           <svg class="upload-icon" aria-hidden="true"><use href="/static/icons.svg#upload"></use></svg>
           <strong id="export-name">Choose a ZIP file</strong>
           <span id="export-detail">or drag and drop it here</span>
-          <span class="file-tag">Instagram or Google Takeout</span>
+          <span class="file-tag">Instagram, Google Takeout, LinkedIn or Reddit</span>
         </label>
-        <p id="export-help" class="field-help">Use Instagram's JSON export or a YouTube and YouTube Music Takeout ZIP.</p>
+        <p id="export-help" class="field-help">Use Instagram's JSON export, a YouTube and YouTube Music Takeout ZIP, LinkedIn's "Get a copy of your data" archive, or Reddit's data request ZIP.</p>
         <details class="voice-options">
           <summary><svg class="icon" aria-hidden="true"><use href="/static/icons.svg#mic"></use></svg><span>Voice matching<span class="optional">Optional</span></span><svg class="icon chevron" aria-hidden="true"><use href="/static/icons.svg#chevron"></use></svg></summary>
           <div class="voice-content">
@@ -147,6 +153,6 @@
   <form method="dialog"><h2 id="missed-title">Add a finding</h2><p class="hint">Select a detail that was missed in this post.</p><label class="field-label" for="missed-cat">Type of detail</label><select id="missed-cat"><option value="ID_DOCUMENT">An ID document</option><option value="FINANCIAL">A bank card or account detail</option><option value="TRAVEL_DOC">A ticket or boarding pass</option><option value="CONTACT">A phone number or email</option><option value="FAMILY_RELATION">A family member's name</option><option value="AWAY_STATUS">Being away from home</option><option value="INSTITUTION">A college or workplace</option><option value="FACE_CLEAR">A clear face photo</option></select><menu><button value="cancel" class="secondary">Cancel</button><button value="ok" class="primary">Add finding</button></menu></form>
 </dialog>
 </main>
-<script src="/static/app.js?v=8"></script>
+<script src="/static/app.js?v=9"></script>
 </body>
 </html>

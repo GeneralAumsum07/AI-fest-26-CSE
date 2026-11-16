@@ -34,11 +34,40 @@ LABELS: dict[str, str] = {
     "live chats": "Live chat",
     "subscriptions": "Subscriptions",
 }
+# LinkedIn and Reddit export flat folders of CSVs, so there the label comes
+# from a root-level file name. Only exact names from this fixed table: the
+# platform sets those names, never a person, so a label still cannot carry
+# anyone's name.
+ROOT_FILES: dict[str, str] = {
+    # LinkedIn
+    "messages.csv": "Messages",
+    "Connections.csv": "Followers and contacts",
+    "Email Addresses.csv": "Email and phone on the account",
+    "PhoneNumbers.csv": "Email and phone on the account",
+    "Comments.csv": "Comments",
+    "SearchQueries.csv": "Search and watch history",
+    "Ad_Targeting.csv": "Ads and businesses",
+    # Reddit
+    "chat_history.csv": "Messages",
+    "message_headers.csv": "Messages",
+    "friends.csv": "Followers and contacts",
+    "linked_phone_number.csv": "Email and phone on the account",
+    "ip_logs.csv": "Sign-in and IP logs",
+    "post_votes.csv": "Votes, saves and subscriptions",
+    "comment_votes.csv": "Votes, saves and subscriptions",
+    "poll_votes.csv": "Votes, saves and subscriptions",
+    "saved_posts.csv": "Votes, saves and subscriptions",
+    "saved_comments.csv": "Votes, saves and subscriptions",
+    "hidden_posts.csv": "Votes, saves and subscriptions",
+    "subscribed_subreddits.csv": "Votes, saves and subscriptions",
+}
 EVERYTHING_ELSE = "Everything else"
-_ORDER = list(dict.fromkeys(LABELS.values())) + [EVERYTHING_ELSE]
+_ORDER = list(dict.fromkeys([*LABELS.values(), *ROOT_FILES.values()])) + [EVERYTHING_ELSE]
 
 
 def _label(name: str) -> str:
+    if "/" not in name and name in ROOT_FILES:
+        return ROOT_FILES[name]
     for seg in name.split("/")[:-1]:          # folders only; a file name is never matched
         if seg.lower() in LABELS:
             return LABELS[seg.lower()]

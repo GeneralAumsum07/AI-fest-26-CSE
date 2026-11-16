@@ -20,6 +20,8 @@ Category = Literal[
 Confidence = Literal["confirmed", "likely", "unsure"]
 Level = Literal["high", "medium", "low"]
 Band = Literal["none", "low", "moderate", "high"]
+# Which export reader built a profile; it also picks the fix wording (wording/templates.py).
+Platform = Literal["instagram", "youtube", "linkedin", "reddit"]
 Reader = Literal["vision", "caption", "patterns", "lexicon", "ner", "user"]
 
 
@@ -67,7 +69,7 @@ class Profile(BaseModel):
     is_private: bool
     # Which export reader built this. Defaulted so existing Instagram callers
     # and stored reports need no change.
-    platform: Literal["instagram", "youtube"] = "instagram"
+    platform: Platform = "instagram"
     posts: list[Post]  # newest first
     # "Recent" is measured from the export's newest item, not from today, so a
     # persona built last week still shows "away right now" in the demo.
@@ -139,7 +141,7 @@ class Report(BaseModel):
     posts_read: int
     is_private: bool
     # The page words platform-level advice from this ("set your videos to Private").
-    platform: Literal["instagram", "youtube"] = "instagram"
+    platform: Platform = "instagram"
     recipes: list[RecipeResult]
     fixes: list[Fix]
     findings: list[Finding]
