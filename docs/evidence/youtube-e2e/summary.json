@@ -1,0 +1,57 @@
+{
+  "checked_at_utc": "2026-11-16T07:36:15.212031+00:00",
+  "audit_id": "e86f32c9a85549ba9f62ee1668a909d2",
+  "real_models": true,
+  "browser_upload": true,
+  "posts_read": 2,
+  "categories": [
+    "AWAY_STATUS",
+    "CONTACT",
+    "FAMILY_RELATION",
+    "ID_DOCUMENT"
+  ],
+  "voice": {
+    "clean_seconds": 10.6,
+    "band": "moderate",
+    "enrolled": true,
+    "seconds_by_post": {
+      "video-0001": 10.6
+    }
+  },
+  "recipes": {
+    "R1": "high",
+    "R3": "high",
+    "R2": "low"
+  },
+  "skipped": [
+    {
+      "ref": "video-0003",
+      "reason": "not_public"
+    },
+    {
+      "ref": "video-0004",
+      "reason": "not_public"
+    }
+  ],
+  "fix_count": 1,
+  "sent_to_cloud": false,
+  "api_checks": "passed: findings, speech, hidden media, thumbnails, redaction, offline wording",
+  "browser_checks": {
+    "report_rendered": true,
+    "public_thumbnail_loaded": true,
+    "private_skip_labels_readable": true,
+    "feedback_removed_contact": true,
+    "R1_feedback_change": "high -> medium",
+    "redacted_payload_panel": true,
+    "forget_status": 204,
+    "forgotten_report_status": 404
+  },
+  "suite": {
+    "passed": 203,
+    "gpu_tests_deselected": 2
+  },
+  "remaining_limitations": [
+    "Guessed Takeout layout; no real Takeout compatibility claim.",
+    "Repeated video frames can show the same ID finding multiple times in the report."
+  ]
+}

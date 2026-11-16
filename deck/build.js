@@ -336,7 +336,7 @@ async function fitW(file, w) {
   // =========================================================================
   // 6. YouTube verification. These are smoke-test observations, kept separate
   // from the frozen held-out accuracy and voice-band evaluation above.
-  // Source: results/youtube-e2e/verification.md and summary.json, 16 Nov 2026.
+  // Source: docs/evidence/youtube-e2e/verification.md and summary.json, 16 Nov 2026.
   // Native text and shapes keep the measured counts editable in PowerPoint.
   // =========================================================================
   {
@@ -378,11 +378,11 @@ async function fitW(file, w) {
       { x: MX, y: 6.62, w: W - 2 * MX, h: 0.3, fontSize: 10.5, italic: true,
         color: C.accent4, margin: 0, isTextBox: true });
     s.addNotes(
-      "Source: results/youtube-e2e/verification.md and summary.json, 16 November 2026. This was a browser-driven production-pipeline check, separate from the frozen Instagram held-out evaluation.\n" +
+      "Source: docs/evidence/youtube-e2e/verification.md and summary.json in the repo, 16 November 2026. This was a browser-driven production-pipeline check, separate from the frozen Instagram held-out evaluation.\n" +
       "Two public videos and two videos marked private/unlisted, all synthetic. The risky public video showed a generated mock ID and had contact, family and away phrases in its description. The second public video was neutral and produced no asserted finding.\n" +
       "Every model was real: Qwen3.5 4B through Ollama, GLiNER, Presidio, Silero VAD and SpeechBrain ECAPA. Matching synthetic speech counted for 10.6 seconds, moderate band, against a separately generated enrolment sentence.\n" +
       "Verified report rendering, ranked fixes, public thumbnails, hidden-media 404s, redaction, offline wording, feedback recomputation and deletion. Removing the contact finding lowered R1 from High to Medium; forgetting removed the run. The default suite also passed 203 tests.\n" +
-      "Limits: the Takeout layout and headers were guessed; no real Google Takeout has been checked. Missing or unknown visibility is included. Repeated frames can repeat an ID finding in the report. No model thresholds or held-out numbers changed.");
+      "Limits: the Takeout layout and headers were guessed; no real Google Takeout has been checked. Missing or unknown visibility is included. That run showed the same ID once per video frame; this was fixed afterwards (one finding per video and category), with unit tests but no repeat of the browser run. No model thresholds or held-out numbers changed.");
   }
 
   // =========================================================================
