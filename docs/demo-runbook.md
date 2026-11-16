@@ -1,6 +1,6 @@
 # Demo runbook
 
-About five minutes. Everything shown is synthetic. Say out loud which beats are live and which were pre-computed.
+About 5 min 15 s, all eight beats kept. Everything shown is synthetic. Say out loud which beats are live and which were pre-computed.
 
 ## Before going on stage
 
@@ -37,7 +37,7 @@ About five minutes. Everything shown is synthetic. Say out loud which beats are 
 | 7 | The family card | 15 s | tab 1 | Scroll to the card: "A caller might know these things. That does not make the call real." Categories only. |
 | 8 | Numbers | 30 s | slide | Results slide: catches, false alarms, rules-only next to the full system, one example it got wrong. |
 
-TBD (Rachit): the beats total about 5 min 15 s on paper. Rehearse, then cut beat 5 or beat 7 if over time.
+The beats total about 5 min 15 s on paper. All eight stay in (decided 16 November); no beat is cut for time.
 
 Do beat 6 before pressing "This is wrong" anywhere if you want the payload to match the untouched report. Feedback changes the payload too, which is also worth saying out loud.
 
@@ -56,7 +56,7 @@ Do beat 6 before pressing "This is wrong" anywhere if you want the payload to ma
 
 ## Rehearsal log
 
-Rehearse twice with Wi-Fi off, timed. Target: under five minutes.
+Rehearse twice with Wi-Fi off, timed. Target: about 5 min 15 s, the planned length.
 
 | Date | Wi-Fi | Total time | What went wrong |
 |---|---|---|---|

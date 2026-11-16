@@ -1,5 +1,7 @@
 # Slide content (five slides, spec section 13)
 
+The original source for the deck. The built deck (`deck/build.js`, 11 slides) has grown past these five; section 5b below is the slide added for the final-push features.
+
 The source for the deck. Build the deck from this once slide 3's numbers exist (Task 15 step 5).
 Every `TBD` needs a measured number or a re-checked source. Nothing here is invented to fill a gap.
 
@@ -80,3 +82,20 @@ Misuse: needs the owner's own export (no username or scraping path); outputs fix
   - Format facts: the Timelinize importer (AGPL; facts only, no code).
   - Prior art: Visual Privacy Advisor (2017), PrivAR (2026), consumer footprint checkers, Thamba and Satark (the "during" stage).
   - An AI coding assistant was used for planning and coding.
+
+## 5b. Before, during and after posting (Usability 15%)
+
+Deck slide 9, kicker "05  USING IT". Added 16 November 2026 for the features in `docs/superpowers/specs/2026-11-16-final-push-design.md`. One measured number per tile; caveats live in the speaker notes.
+
+| Tile | Number on the slide | What it says |
+|---|---|---|
+| Try a fix | High → None | Ticking the top fix ends ID misuse on the high-risk profile; two fixes take the phone-call scam from Medium to Low. A preview: nothing changes on Instagram. |
+| Check before you post | Stop · Look · Nothing | One photo or video checked before posting. Mock Aadhaar: Stop, 7.6 s warm. Food photo: Nothing, 0.5 s. "Nothing" never says safe. |
+| What was opened | 13 of 98 files | A receipt in counts; the 85 never-opened files include 60 message files. Fixed labels, never a folder name. |
+| Next steps and the family card | 3 checked steps | Sanchar Saathi, UIDAI biometric lock, 1930, each checked on the official site. The card lists what a caller might know: categories, never values. |
+
+Speaker-note caveats:
+- Single timed runs on synthetic personas, not benchmarks. A cold first check took 18 s.
+- Stop / Look / Nothing is a hand-written rule and has not been evaluated. A boarding pass read as "likely" gives Look.
+- The 85 never-opened files are synthetic placeholders; the reader refuses them, and a test checks that.
+- Next steps were checked on sancharsaathi.gov.in and uidai.gov.in on 16 November 2026; fixed text, never reworded online.
