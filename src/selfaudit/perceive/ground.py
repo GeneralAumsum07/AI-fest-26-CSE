@@ -102,7 +102,8 @@ def _contradicted_contact(rs: list[RawFinding], checked: bool) -> bool:
 
 def ground(raws: list[RawFinding], captions: dict[str, str], post_of: dict[str, str],
            checked: set[str] | None = None) -> list[Finding]:
-    """One Finding per (item_id, category), in first-seen order.
+    """One Finding per (item_id, category), in first-seen order; keyframes of
+    one video then collapse to one Finding per (video, category).
 
     `checked` is the set of item_ids whose text the pattern recognisers read
     without error. It is passed in, not inferred, because the ablation runs
@@ -172,4 +173,34 @@ def ground(raws: list[RawFinding], captions: dict[str, str], post_of: dict[str, 
             post_id=post_of.get(item_id, item_id.split("/", 1)[0]), category=category,
             what=what, confidence=confidence, supports=sorted(supports), value=value,
         ))
-    return out
+    return _merge_frames(out)
+
+
+_RANK = {"confirmed": 2, "likely": 1, "unsure": 0}
+
+
+def _merge_frames(findings: list[Finding]) -> list[Finding]:
+    """One finding per (video, category), not one per keyframe.
+
+    Keyframes are separate items ("…/media-0#f3") so each is grounded against
+    its own transcribed text. Grounding is done per frame on purpose. But an ID
+    card on screen for four seconds is one exposure, and four identical cards
+    in the report read as four problems. Keep the strongest frame's finding
+    as it stands, without pooling support across frames: two frames of the
+    same model saying the same thing are not two independent readers, so
+    pooling would turn "likely" into "confirmed" for nothing.
+    """
+    best: dict[tuple[str, str], int] = {}   # (media item, category) -> index in kept
+    kept: list[Finding] = []
+    for f in findings:
+        key = (f.item_id.split("#", 1)[0], f.category)
+        if key not in best:
+            best[key] = len(kept)
+            kept.append(f)
+            continue
+        cur = kept[best[key]]
+        # Stronger confidence wins; at equal confidence, a frame with a value
+        # (it feeds the fix text and the checksum story) beats one without.
+        if (_RANK[f.confidence], f.value is not None) > (_RANK[cur.confidence], cur.value is not None):
+            kept[best[key]] = f   # same slot, so first-seen order is preserved
+    return kept

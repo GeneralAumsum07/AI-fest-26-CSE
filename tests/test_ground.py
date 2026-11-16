@@ -134,3 +134,32 @@ def test_the_caption_reader_is_not_held_to_the_word_list():
     # first day at Infosys" is read in context by the caption model.
     f, = G([R("caption", "INSTITUTION", value="Infosys")], caption="first day at Infosys!")
     assert f.confidence == "likely"
+
+
+def _frames(*raws):
+    # Keyframes of one video are separate items ("...#fN"); captions sit on frame 0.
+    ids = {r.item_id for r in raws}
+    return ground(list(raws), {i: "" for i in ids}, {i: "p" for i in ids})
+
+
+def test_one_id_seen_in_several_frames_is_one_finding():
+    fs = _frames(*(R("vision", "ID_DOCUMENT", item_id=f"p/media-0#f{n}", id_subtype="government",
+                     model_confidence="medium") for n in range(4)))
+    assert len(fs) == 1
+
+
+def test_the_merged_finding_keeps_the_strongest_frame():
+    # Frame 1 has a blurry read; frame 2 has the checksum-backed number.
+    fs = _frames(R("vision", "ID_DOCUMENT", item_id="p/media-0#f1", model_confidence="low"),
+                 R("vision", "ID_DOCUMENT", item_id="p/media-0#f2", extracted_text="2345 6789 0123",
+                   id_subtype="government"),
+                 R("patterns", "ID_DOCUMENT", item_id="p/media-0#f2", value="2345 6789 0123"))
+    f, = fs
+    assert (f.confidence, f.value) == ("confirmed", "2345 6789 0123")
+
+
+def test_different_videos_and_categories_stay_separate():
+    fs = _frames(R("vision", "ID_DOCUMENT", item_id="p/media-0#f0"),
+                 R("vision", "ID_DOCUMENT", item_id="p/media-1#f0"),
+                 R("vision", "FACE_CLEAR", item_id="p/media-0#f3"))
+    assert len(fs) == 3
