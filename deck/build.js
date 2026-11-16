@@ -10,7 +10,7 @@
 // the ledger) or a cited source. Do not round or "tidy" them here: change the
 // source, then the slide.
 //
-// Run: node diagrams/render.js && node build.js
+// Run: node diagrams/render.js && node build.js [output.pptx]
 const path = require("path");
 const fs = require("fs");
 const pptxgen = require("pptxgenjs");
@@ -20,7 +20,9 @@ const SKILL = "C:/Users/Rachit/AppData/Local/Claude-Data/claude_pzs8sxrjxfjjc/lo
 const { applyTheme } = require(SKILL + "/scripts/apply_theme.js");
 
 const A = (f) => path.join(__dirname, "assets", f);
-const OUT = path.join(__dirname, "exposure-self-audit.pptx");
+// An optional destination lets us produce a revision while PowerPoint holds
+// the original open, without closing the user's presentation or losing edits.
+const OUT = path.resolve(__dirname, process.argv[2] || "exposure-self-audit.pptx");
 const REPO = "https://github.com/GeneralAumsum07/AI-fest-26-CSE";
 
 // Palette. Ink and paper carry ~90% of the deck; the three risk colours are
@@ -110,7 +112,7 @@ async function fitW(file, w) {
     s.addText("AI-FEST 2026  ·  CSE  ·  DIGITAL IDENTITY THEFT", { x: MX, y: 0.6, w: 7, h: 0.3,
       fontSize: 11, color: C.accent5, charSpacing: 3, margin: 0, isTextBox: true });
     s.addText("Exposure Self-Audit", { placeholder: "title" });
-    s.addText("Find what a stranger could build from your Instagram before a scammer does, and the few posts to take down to stop it.",
+    s.addText("Find what a stranger could build from your Instagram or YouTube, and which posts to change before they do.",
       { x: MX, y: 3.35, w: 6.4, h: 1.2, fontSize: 19, color: "C9C4B8", margin: 0, valign: "top", isTextBox: true });
     s.addText([
       { text: "Runs on your laptop.", options: { bold: true, color: C.background1 } },
@@ -136,7 +138,7 @@ async function fitW(file, w) {
       fontSize: 13, color: C.background1, valign: "middle", margin: 0, isTextBox: true,
       hyperlink: { url: REPO } });
     s.addNotes(
-      "One line: this is a check a student runs on their own Instagram export before a scammer does the same research.\n" +
+      "One line: this is a check a student runs on their own Instagram or YouTube export before a scammer does the same research. YouTube has passed a real-model end-to-end browser test on a synthetic Takeout archive; real Takeout compatibility is still unverified.\n" +
       "Point at the post: the black bars are what the tool finds. Each one is tagged with the scam it feeds: R1 is a voice-clone call to the family, R3 is a loan or SIM in your name.\n" +
       "Everything in this deck and the demo is synthetic data.");
   }
@@ -202,7 +204,7 @@ async function fitW(file, w) {
     s.addText("Three independent readers, then rules that no model gets to decide.", { placeholder: "title" });
     const d = await fitW(A("pipeline_t.png"), W - 2 * MX);
     s.addImage({ path: A("pipeline_t.png"), x: MX, y: 1.85, w: d.w, h: d.h,
-      altText: "Pipeline: Instagram export, allowlisted reader, three readers (vision model, rules and text readers, voice), grounding, attack recipes R1 to R3, ranked fixes and a plain report." });
+      altText: "Pipeline: Instagram or YouTube export, allowlisted reader, three readers (vision model, rules and text readers, voice), grounding, attack recipes R1 to R3, ranked fixes and a plain report." });
 
     const points = [
       ["cpu", "Fits an 8 GB laptop GPU", "one model loaded at a time: vision is unloaded before the speaker model starts"],
@@ -221,7 +223,7 @@ async function fitW(file, w) {
         margin: 0, valign: "top", isTextBox: true });
     }
     s.addNotes(
-      "Order: export ZIP, allowlisted reader, keyframes and audio, vision model on every image, caption reader, unload, rules layer (Presidio + checksums + lexicon), grounding, ingredients, recipes R1 to R3, ranked fixes, redacted wording.\n" +
+      "Order: Instagram or YouTube export ZIP, platform-specific allowlisted reader, keyframes and audio, vision model on every image, caption reader, unload, rules layer (Presidio + checksums + lexicon), grounding, ingredients, recipes R1 to R3, ranked fixes, redacted wording. YouTube titles and descriptions enter the caption path; its uploaded videos enter the same frame and audio readers.\n" +
       "Qwen3.5 4B via Ollama reads documents and scenes. GLiNER finds names in captions on the CPU. Silero VAD finds speech; SpeechBrain ECAPA checks it is your voice against one enrol sentence.\n" +
       "Grounding: a name or number the model claims must appear in the post's own text or it is dropped. Two readers agreeing is 'confirmed', one is 'likely', none goes to 'Not sure'.\n" +
       "Recipes are data, not model output: three recipes, ten level rules in one function.");
@@ -267,7 +269,7 @@ async function fitW(file, w) {
       { text: "Why combine: ", options: { bold: true } },
       { text: "each reader alone misses whole categories. Rules miss ID, card, travel, college and face; vision misses phone, family and away.", options: {} },
     ], { x: rx, y: 4.72, w: rw, h: 1.1, fontSize: 12.5, color: C.text1, margin: 0, valign: "top", isTextBox: true });
-    s.addText("83 synthetic images, run once after every threshold was frozen. A small set, so the intervals are wide.",
+    s.addText("83 synthetic Instagram images, run once after every threshold was frozen. A small set, so the intervals are wide.",
       { x: rx, y: 5.95, w: rw, h: 0.6, fontSize: 10, italic: true, color: C.accent4, margin: 0, valign: "top", isTextBox: true });
     s.addNotes(
       "Single held-out run, 40 risky and 43 harmless synthetic images, Wilson 95% intervals.\n" +
@@ -332,7 +334,59 @@ async function fitW(file, w) {
   }
 
   // =========================================================================
-  // 6. Privacy and misuse
+  // 6. YouTube verification. These are smoke-test observations, kept separate
+  // from the frozen held-out accuracy and voice-band evaluation above.
+  // Source: results/youtube-e2e/verification.md and summary.json, 16 Nov 2026.
+  // Native text and shapes keep the measured counts editable in PowerPoint.
+  // =========================================================================
+  {
+    const s = slide("Results");
+    kicker(s, "03  YOUTUBE VERIFIED");
+    s.addText("YouTube works end to end with the real local models.", { placeholder: "title" });
+
+    const checks = [
+      ["file-archive", "Upload and decode", "Browser upload of a synthetic Takeout ZIP; actual MP4 frames and AAC speech decoded."],
+      ["cpu", "Production readers", "Qwen3.5 4B, GLiNER, Presidio, Silero VAD and ECAPA. No simulated model responses."],
+      ["shield-check", "Report and privacy", "ID, contact, family and away findings. Extracted details redacted; hidden videos blocked."],
+      ["check-check", "Feedback and deletion", "Remove the contact finding: phone-call risk drops High to Medium. Forget the run: report returns 404."],
+    ];
+    for (let i = 0; i < checks.length; i++) {
+      const [ic, head, body] = checks[i];
+      const y = 1.95 + i * 1.1;
+      s.addShape(pres.shapes.OVAL, { x: MX, y, w: 0.52, h: 0.52, fill: { color: C.text1 } });
+      s.addImage({ data: await icon(ic, HEX.paper), x: MX + 0.12, y: y + 0.12, w: 0.28, h: 0.28 });
+      s.addText(head, { x: MX + 0.75, y: y - 0.02, w: 5.65, h: 0.34, fontFace: THEME.headFontFace,
+        fontSize: 16, bold: true, color: C.text1, margin: 0, isTextBox: true });
+      s.addText(body, { x: MX + 0.75, y: y + 0.34, w: 5.65, h: 0.68, fontSize: 12.5,
+        color: C.text1, margin: 0, valign: "top", isTextBox: true });
+    }
+
+    const px = 7.75, pw = W - MX - px;
+    s.addShape(pres.shapes.ROUNDED_RECTANGLE, { x: px, y: 1.95, w: pw, h: 4.55,
+      fill: { color: C.text1 }, rectRadius: 0.08, objectName: "YouTube verification results" });
+    s.addText("2 of 4", { x: px + 0.35, y: 2.23, w: pw - 0.7, h: 0.75,
+      fontFace: THEME.headFontFace, fontSize: 42, bold: true, color: C.background1, margin: 0, isTextBox: true });
+    s.addText("videos audited; the 2 marked private or unlisted were excluded", { x: px + 0.35, y: 3.02,
+      w: pw - 0.7, h: 0.65, fontSize: 14, color: C.background1, margin: 0, valign: "top", isTextBox: true });
+    s.addText("10.6 s", { x: px + 0.35, y: 3.93, w: pw - 0.7, h: 0.75,
+      fontFace: THEME.headFontFace, fontSize: 42, bold: true, color: C.background1, margin: 0, isTextBox: true });
+    s.addText("of matching speech in the enrolled voice", { x: px + 0.35, y: 4.72,
+      w: pw - 0.7, h: 0.65, fontSize: 14, color: C.background1, margin: 0, valign: "top", isTextBox: true });
+    s.addText("SYNTHETIC MEDIA  /  16 NOV 2026", { x: px + 0.35, y: 5.85, w: pw - 0.7, h: 0.3,
+      fontSize: 10, bold: true, charSpacing: 1, color: C.accent5, margin: 0, isTextBox: true });
+    s.addText("End-to-end verification on synthetic media. Real Takeout compatibility and YouTube held-out accuracy remain unverified.",
+      { x: MX, y: 6.62, w: W - 2 * MX, h: 0.3, fontSize: 10.5, italic: true,
+        color: C.accent4, margin: 0, isTextBox: true });
+    s.addNotes(
+      "Source: results/youtube-e2e/verification.md and summary.json, 16 November 2026. This was a browser-driven production-pipeline check, separate from the frozen Instagram held-out evaluation.\n" +
+      "Two public videos and two videos marked private/unlisted, all synthetic. The risky public video showed a generated mock ID and had contact, family and away phrases in its description. The second public video was neutral and produced no asserted finding.\n" +
+      "Every model was real: Qwen3.5 4B through Ollama, GLiNER, Presidio, Silero VAD and SpeechBrain ECAPA. Matching synthetic speech counted for 10.6 seconds, moderate band, against a separately generated enrolment sentence.\n" +
+      "Verified report rendering, ranked fixes, public thumbnails, hidden-media 404s, redaction, offline wording, feedback recomputation and deletion. Removing the contact finding lowered R1 from High to Medium; forgetting removed the run. The default suite also passed 203 tests.\n" +
+      "Limits: the Takeout layout and headers were guessed; no real Google Takeout has been checked. Missing or unknown visibility is included. Repeated frames can repeat an ID finding in the report. No model thresholds or held-out numbers changed.");
+  }
+
+  // =========================================================================
+  // 7. Privacy and misuse
   // =========================================================================
   pres.addSection({ title: "Privacy" });
   {
@@ -340,8 +394,8 @@ async function fitW(file, w) {
     kicker(s, "04  PRIVACY AND MISUSE");
     s.addText("A tool about leaks that does not leak, and does not help the attacker.", { placeholder: "title" });
     const rows = [
-      ["book-open", "Read", "Profile, the post, story and reel indexes, and the media they point to."],
-      ["ban", "Never opened", "Messages, contacts, searches, ad data. Not on the allowlist."],
+      ["book-open", "Read", "Instagram profile and media indexes; YouTube channel and video metadata; allowed photos and videos."],
+      ["ban", "Never opened", "Messages, contacts, searches, ad data; YouTube history, comments and subscriptions."],
       ["trash-2", "Kept", "Nothing. The temp folder is wiped on exit; the voice clip stays in memory."],
       ["wifi-off", "Sent", "Nothing by default. If online wording is switched on, only a redacted payload, shown in the app first. The server listens on loopback only."],
     ];
@@ -384,7 +438,7 @@ async function fitW(file, w) {
   }
 
   // =========================================================================
-  // 7. Using it, limits
+  // 8. Using it, limits
   // =========================================================================
   pres.addSection({ title: "Using it" });
   {
@@ -417,7 +471,7 @@ async function fitW(file, w) {
       "Tested on synthetic data; intervals are wide.",
       "Voice thresholds are heuristics.",
       "A 4B model misreads digits (checksums catch most).",
-      "YouTube's export layout is a guess, untested on a real export.",
+      "YouTube passed the synthetic end-to-end check; real Takeout compatibility is unverified.",
     ];
     s.addText(limits.map((l, i) => ({ text: l, options: { bullet: true, breakLine: i < limits.length - 1 } })),
       { x: rx, y: ly + 0.4, w: rw, h: 2.0, fontSize: 12.5, color: C.text1, margin: 0, valign: "top",
@@ -429,7 +483,7 @@ async function fitW(file, w) {
   }
 
   // =========================================================================
-  // 8. What's next: more platforms, and the safe form of "scan my profile"
+  // 9. What's next: more platforms, and the safe form of "scan my profile"
   // =========================================================================
   pres.addSection({ title: "Next" });
   {
@@ -441,8 +495,9 @@ async function fitW(file, w) {
     // shape and palette from slide 5, so "built / next / later / no" reads in
     // the deck's existing colour language rather than a new legend.
     const rows = [
-      // YouTube is BUILT but says plainly that its layout is guessed and unevaluated.
-      ["BUILT", HEX.safe, true, "Instagram, YouTube", "Instagram tested end to end. YouTube prototype: guessed Takeout layout; unknown visibility is audited too. No history or comments. Not evaluated."],
+      // Synthetic end-to-end verification does not establish real-export
+      // compatibility or replace a held-out accuracy evaluation.
+      ["BUILT", HEX.safe, true, "Instagram, YouTube", "Both verified end to end with real models on synthetic data. YouTube: real Takeout compatibility and held-out accuracy still unverified."],
       ["NEXT", HEX.med, true, "LinkedIn", "A new export reader and allowlist. The photo, text and voice readers, recipes and report are reused."],
       ["LATER", HEX.muted, false, "Reddit", "Mostly text. Comment history can give away a city or a college."],
       ["NO", HEX.high, false, "Discord, Snapchat", "Mostly private messages, and the app never reads messages."],
@@ -483,14 +538,14 @@ async function fitW(file, w) {
     s.addText("Not built yet.", { x: px + 0.35, y: 6.05, w: pw - 0.7, h: 0.35, fontSize: 11, italic: true, color: C.accent5,
       margin: 0, isTextBox: true });
     s.addNotes(
-      "Instagram is built and tested. The YouTube reader is built and passes its tests, but on a guessed export layout: nobody has opened a real YouTube Takeout yet, and it has not been through the held-out evaluation. Videos marked private or unlisted are skipped; missing or unknown visibility is included, so a private upload can be flagged if its visibility cannot be read. Everything else on this slide is a plan.\n" +
+      "Instagram and YouTube are built and verified end to end with real local models on synthetic data. YouTube's 16 November 2026 browser check verified upload, video and speech decoding, model inference, report rendering, exclusions, redaction, feedback and deletion. The Takeout layout is still guessed and has not been checked against a real archive; YouTube has not had a held-out accuracy evaluation. Videos marked private or unlisted are skipped; missing or unknown visibility is included. Everything else on this slide is a plan.\n" +
       "Why one reader per platform: each export has its own format and its own private parts, so the 'never opens your messages' allowlist is rebuilt per platform. The models, recipes and report do not change.\n" +
       "Why not just paste a link: anyone could paste anyone's link, which turns a self-audit into reconnaissance on strangers. Proving ownership first is what keeps it a self-audit.\n" +
       "API access per platform still needs checking before building; Instagram's API, for example, covers business and creator accounts only.");
   }
 
   // =========================================================================
-  // 9. Close: repo and credits
+  // 10. Close: repo and credits
   // =========================================================================
   pres.addSection({ title: "Close" });
   {

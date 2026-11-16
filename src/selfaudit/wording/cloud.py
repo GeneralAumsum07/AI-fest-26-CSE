@@ -22,6 +22,7 @@ has and still needs, and ranked fixes. Explain each risk and each fix in plain w
 in the language given by "language" (en, hi or te). Describe only. Never write a message,
 script or dialogue a scammer could use. Never say the user is "safe" and never use
 percentages. Every field must be under 400 characters.
+Use neutral product wording. Do not describe the application as "I" or "we".
 Return only JSON of this shape:
 {"summary": str, "recipes": {"R1": {"title": str, "reasons": str, "advice": str}, ...}, "fixes": [str, ...]}
 """

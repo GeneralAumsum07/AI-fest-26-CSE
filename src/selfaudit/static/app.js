@@ -9,7 +9,7 @@ let recorded = null;          // a Blob from the microphone, if the user recorde
 let missedPost = null;        // the post the "You missed something" dialog is about
 
 // Words, not codes. Bands only: the report never shows a score or a percentage.
-const LEVEL = { high: "HIGH", medium: "MEDIUM", low: "LOW" };
+const LEVEL = { high: "High", medium: "Medium", low: "Low" };
 const CATEGORY = {
   ID_DOCUMENT: "an ID document", FINANCIAL: "a bank card or account detail", TRAVEL_DOC: "a ticket or boarding pass",
   CONTACT: "a phone number or email", FAMILY_RELATION: "a family member's name", AWAY_STATUS: "that you are away",
@@ -20,7 +20,7 @@ const REASON = {
   not_public: "marked private or unlisted; excluded from the audit",
   over_limit: "over the reading limit", unreadable_video: "the video could not be read",
   unreadable_audio: "the video's sound could not be read",
-  unreadable: "the file could not be read", unsupported_type: "a file type I can't read",
+  unreadable: "the file could not be read", unsupported_type: "this file type is not supported",
   model_error: "the image reader failed on it", model_output: "the image reader's answer made no sense",
   out_of_memory: "the laptop ran out of memory on it", caption_error: "the caption reader failed on it",
   pattern_error: "the number checker failed on it", voice_error: "the voice check failed on it",
@@ -29,6 +29,7 @@ const STAGE = { images: "Looking at photos and video frames", captions: "Reading
 
 function show(view) {
   for (const v of document.querySelectorAll(".view")) v.hidden = v.id !== view;
+  $("card").hidden = view === "progress" || view === "failed";
 }
 
 // The server's labels count from the newest post ("post 1" = newest), the same
@@ -67,7 +68,7 @@ function thumbs(postIds) {
     box.append(el("figure", { class: "thumb" },
       el("img", { src: `/api/audits/${auditId}/media/${encodeURIComponent(id)}/0`, alt: postName(id), loading: "lazy" }),
       el("figcaption", {}, postName(id), " ",
-        el("button", { class: "link", type: "button", onclick: () => openMissed(id) }, "You missed something"))));
+        el("button", { class: "link", type: "button", onclick: () => openMissed(id) }, "Add a finding"))));
   }
   return box;
 }
@@ -81,16 +82,16 @@ function toggleThumbs(button, postIds) {
 
 function findingLine(f) {
   return el("li", { class: "finding" },
-    el("span", {}, `${f.what} (${postName(f.post_id)})`),
+    el("span", {}, f.what, el("span", { class: "post-reference" }, postName(f.post_id))),
     el("button", { class: "link", type: "button", onclick: () => feedback({ kind: "wrong", finding_id: f.finding_id }) },
-      "This is wrong"));
+      "Mark incorrect"));
 }
 
 function render(body) {
   const r = body.report, t = body.text;
   labels = body.post_labels || {};
   const nCouldnt = r.couldnt_check.length;
-  $("counts").textContent = `${r.posts_read} posts read · ${nCouldnt} couldn't be checked`;
+  $("counts").textContent = `${r.posts_read} posts analysed · ${nCouldnt} items excluded or unavailable`;
   $("summary").textContent = t.summary;
   $("voice-note").hidden = !body.voice_note;
   $("voice-note").textContent = body.voice_note || "";
@@ -103,19 +104,21 @@ function render(body) {
   for (const rec of r.recipes) {
     if (!rec.level && !rec.not_sure) continue;
     const words = t.recipes[rec.recipe_id] || { title: rec.recipe_id, reasons: "", advice: "" };
-    const lvl = rec.not_sure ? ["unsure", "NOT SURE"] : [rec.level, LEVEL[rec.level]];
+    const lvl = rec.not_sure ? ["unsure", "Needs review"] : [rec.level, LEVEL[rec.level]];
     const { findings, posts: looked } = recipePosts(rec, r);
     const btn = el("button", { class: "link", type: "button" },
       looked.length === 1 ? "See the post" : `See the ${looked.length} posts`);
     btn.addEventListener("click", () => toggleThumbs(btn, looked));
     box.append(el("article", { class: "recipe" },
-      el("h3", {}, el("span", { class: `level ${lvl[0]}` }, `● ${lvl[1]}`), words.title),
+      el("div", { class: "recipe-heading" }, el("h3", {}, words.title), el("span", { class: `level ${lvl[0]}` }, lvl[1])),
       el("p", {}, words.reasons),
-      findings.length ? el("ul", {}, ...findings.map(findingLine)) : null,
-      words.advice ? el("p", { class: "hint" }, words.advice) : null,
+      findings.length ? el("ul", { class: "findings" }, ...findings.map(findingLine)) : null,
+      words.advice ? el("p", { class: "advice" }, words.advice) : null,
       looked.length ? btn : null));
   }
-  if (!box.children.length) box.append(el("p", { class: "note" }, "None of the three risks I check for came up in what I could read."));
+  if (!box.children.length) box.append(el("article", { class: "recipe empty-report" },
+    el("h3", {}, "No assessed misuse scenarios identified"),
+    el("p", {}, "No matching scenario was found in the content analysed. This does not rule out other exposure or misuse.")));
 
   fill("unsure", r.unsure, (f) => {
     const li = findingLine(f);
@@ -132,7 +135,10 @@ function render(body) {
   r.fixes.forEach((fx, i) => {
     const btn = el("button", { class: "link", type: "button" }, fx.post_ids.length === 1 ? "See the post" : "See the posts");
     btn.addEventListener("click", () => toggleThumbs(btn, fx.post_ids));
-    fixes.append(el("li", {}, t.fixes[i] || `${fx.action} ${fx.post_ids.map(postName).join(", ")}`, " ", btn));
+    // The list supplies its own accessible numbering. Strip the plain-text
+    // prefix used by offline templates to avoid rendering each rank twice.
+    const text = (t.fixes[i] || `${fx.action} ${fx.post_ids.map(postName).join(", ")}`).replace(/^\d+\.\s*/, "");
+    fixes.append(el("li", {}, text, " ", btn));
   });
   if (!r.fixes.length) fixes.append(el("li", { class: "note" }, "Nothing to fix first."));
 
@@ -168,17 +174,55 @@ $("missed-dialog").addEventListener("close", () => {
 });
 
 async function poll() {
-  const p = await (await fetch(`/api/audits/${auditId}/progress`)).json();
-  if (p.error) { $("error").textContent = p.error; show("failed"); return; }
-  if (!p.finished) {
-    $("stage").textContent = `${STAGE[p.stage] || "Opening your export"}${p.total ? ` · ${p.done} of ${p.total}` : ""}`;
-    $("bar").max = p.total || 1; $("bar").value = p.done;
-    setTimeout(poll, 500);
-    return;
+  // A response from a forgotten run must not bring its report back on screen.
+  const runId = auditId;
+  try {
+    const response = await fetch(`/api/audits/${runId}/progress`);
+    if (!response.ok) throw new Error("The audit is no longer available. Choose the export again to start a new run.");
+    const p = await response.json();
+    if (runId !== auditId) return;
+    if (p.error) { $("error").textContent = p.error; show("failed"); return; }
+    if (!p.finished) {
+      $("stage").textContent = `${STAGE[p.stage] || "Opening your export"}${p.total ? ` · ${p.done} of ${p.total}` : ""}`;
+      $("bar").max = p.total || 1; $("bar").value = p.done;
+      setTimeout(poll, 500);
+      return;
+    }
+    const reportResponse = await fetch(`/api/audits/${runId}/report`);
+    if (!reportResponse.ok) throw new Error("The report could not be loaded. Choose the export again to retry.");
+    const body = await reportResponse.json();
+    if (runId !== auditId) return;
+    render(body);
+    show("report");
+  } catch (error) {
+    if (runId !== auditId) return;
+    $("error").textContent = error.message || "The local app could not be reached. Check that it is running and try again.";
+    show("failed");
   }
-  render(await (await fetch(`/api/audits/${auditId}/report`)).json());
-  show("report");
 }
+
+// Keep the native file input and validation for keyboard and screen-reader
+// users; the styled drop target is only another way to select that same file.
+function updateExportSelection() {
+  const file = $("export").files[0];
+  const isZip = !file || /\.zip$/i.test(file.name);
+  $("export").setCustomValidity(isZip ? "" : "Choose an Instagram or YouTube export in ZIP format.");
+  $("export-name").textContent = file ? file.name : "Choose a ZIP file";
+  $("export-detail").textContent = file ? `${(file.size / (1024 * 1024)).toFixed(1)} MB · selected on this device` : "or drag and drop it here";
+  $("drop-zone").classList.toggle("has-file", Boolean(file));
+}
+$("export").addEventListener("change", updateExportSelection);
+for (const name of ["dragenter", "dragover"]) $("drop-zone").addEventListener(name, (event) => {
+  event.preventDefault(); $("drop-zone").classList.add("drag-over");
+});
+for (const name of ["dragleave", "drop"]) $("drop-zone").addEventListener(name, (event) => {
+  event.preventDefault(); $("drop-zone").classList.remove("drag-over");
+});
+$("drop-zone").addEventListener("drop", (event) => {
+  if (!event.dataTransfer.files.length) return;
+  $("export").files = event.dataTransfer.files;
+  updateExportSelection();
+});
 
 $("pick").addEventListener("submit", async (e) => {
   e.preventDefault();
@@ -187,28 +231,37 @@ $("pick").addEventListener("submit", async (e) => {
   const enrol = recorded || $("enrol").files[0];
   if (enrol) form.append("enrol", enrol, recorded ? "voice.webm" : enrol.name);
   show("progress");
-  const res = await fetch("/api/audits", { method: "POST", body: form });
-  auditId = (await res.json()).id;
-  location.hash = `audit=${auditId}`;
-  poll();
+  try {
+    const res = await fetch("/api/audits", { method: "POST", body: form });
+    if (!res.ok) throw new Error("The export could not be uploaded. Check the ZIP file and try again.");
+    auditId = (await res.json()).id;
+    location.hash = `audit=${auditId}`;
+    poll();
+  } catch (error) {
+    $("error").textContent = error.message || "The local app could not be reached. Check that it is running and try again.";
+    show("failed");
+  }
 });
 
 $("rec").addEventListener("click", async () => {
   // About 8 seconds, then stop on its own; the browser asks for the microphone itself.
   try {
+    $("rec").disabled = true;
     const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
     const rec = new MediaRecorder(stream), parts = [];
     rec.ondataavailable = (ev) => parts.push(ev.data);
     rec.onstop = () => {
       stream.getTracks().forEach((tr) => tr.stop());
       recorded = new Blob(parts, { type: rec.mimeType });
-      $("rec-state").textContent = "Recorded.";
+      $("rec-state").textContent = "Voice reference recorded. It will be used for this audit.";
+      $("rec").disabled = false;
     };
     rec.start();
     $("rec-state").textContent = "Recording… read any sentence aloud.";
     setTimeout(() => rec.stop(), 8000);
   } catch {
-    $("rec-state").textContent = "No microphone. You can pick a recording instead.";
+    $("rec-state").textContent = "Microphone unavailable. Choose an audio file instead.";
+    $("rec").disabled = false;
   }
 });
 
@@ -220,14 +273,20 @@ $("left").addEventListener("click", async () => {
   box.hidden = false;
 });
 
-$("forget").addEventListener("click", async () => {
-  await fetch(`/api/audits/${auditId}`, { method: "DELETE" });
+async function forgetRun() {
+  if (auditId) await fetch(`/api/audits/${auditId}`, { method: "DELETE" });
   auditId = null; recorded = null; location.hash = "";
   $("pick").reset();
+  $("rec-state").textContent = "";
+  $("payload-box").hidden = true;
+  updateExportSelection();
   show("start");
-});
+}
+$("forget").addEventListener("click", forgetRun);
 
-for (const b of document.querySelectorAll("[data-restart]")) b.addEventListener("click", () => show("start"));
+// Retrying also clears the failed run's URL, so a refresh cannot reopen an
+// old error or leave its upload behind after another file is selected.
+for (const b of document.querySelectorAll("[data-restart]")) b.addEventListener("click", forgetRun);
 
 // A run started from the command line (--export) arrives as #audit=<id>.
 const fromHash = /audit=([0-9a-f]+)/.exec(location.hash);

@@ -75,10 +75,17 @@ def test_template_wording_rules(high_state, empty_state):
     assert not re.search(r"\bsafe\b", everything, re.I) and not re.search(r"\d+\s*%", everything)
     assert any("misuse of your ID document" in f for f in text.fixes)    # "ID" keeps its capitals
     empty = render_local(build_payload(empty_state.report(), empty_state.profile))
-    assert empty.summary.startswith("I found nothing urgent in what I could read")
+    assert "urgent" in empty.summary.lower()
+    # Report copy describes the product's result, rather than impersonating a
+    # person conducting the audit. Exercise both populated and empty reports.
+    assert not re.search(r"\b(?:I|we)\b", everything + " " + empty.summary, re.I)
 
 
 def test_no_enrolment_line():
     v = VoiceResult(clean_seconds=20, band="moderate", enrolled=False, seconds_by_post={"a": 12, "b": 8})
-    assert voice_note(v) == "Speech found in 2 reels. It is probably you; record a sentence and I can be sure."
+    note = voice_note(v)
+    assert "2 videos" in note and "voice reference" in note
+    # Speaker matching is approximate; recording a sentence cannot guarantee
+    # certainty. The wording must work for YouTube uploads as well as reels.
+    assert not re.search(r"\b(?:I|we|sure|certain)\b", note, re.I)
     assert voice_note(v.model_copy(update={"enrolled": True})) is None

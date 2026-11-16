@@ -178,6 +178,9 @@
   }
 }
 @layer utilities {
+  .fixed {
+    position: fixed;
+  }
   .relative {
     position: relative;
   }
@@ -208,11 +211,23 @@
   .ml-auto {
     margin-left: auto;
   }
+  .block {
+    display: block;
+  }
   .flex {
     display: flex;
   }
+  .grid {
+    display: grid;
+  }
+  .hidden {
+    display: none;
+  }
   .inline {
     display: inline;
+  }
+  .table {
+    display: table;
   }
   .h-6 {
     height: calc(var(--spacing) * 6);
@@ -521,6 +536,9 @@
     @supports (color: color-mix(in lab, red, red)) {
       color: color-mix(in oklab, var(--color-paper) 70%, transparent);
     }
+  }
+  .italic {
+    font-style: italic;
   }
   .shadow-\[0_18px_40px_rgba\(0\,0\,0\,0\.45\)\] {
     --tw-shadow: 0 18px 40px var(--tw-shadow-color, rgba(0,0,0,0.45));

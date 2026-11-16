@@ -1,147 +1,130 @@
 <!doctype html>
-<!--
-  One page, three views (start, progress, report), no build step and no CDN:
-  the app must work with Wi-Fi off, so every byte is served from this laptop.
--->
+<!-- All assets are served locally. The audit works without a CDN or account. -->
 <html lang="en">
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<title>Exposure self-audit</title>
-<link rel="stylesheet" href="/static/style.css">
+<meta name="color-scheme" content="light">
+<title>Exposure — Personal privacy audit</title>
+<link rel="icon" type="image/svg+xml" href="/static/mark.svg">
+<link rel="preload" href="/static/fonts/SourceSans3-Upright.woff2" as="font" type="font/woff2" crossorigin>
+<link rel="stylesheet" href="/static/style.css?v=2">
 </head>
 <body>
-<main>
-
-<section id="start" class="view">
-  <h1>What can a stranger build from your Instagram or YouTube?</h1>
-  <p class="lead">Pick your own data export: Instagram's JSON ZIP from "Download your information",
-     or a Google Takeout ZIP of "YouTube and YouTube Music". Everything is read on this laptop.</p>
-  <div class="lists">
-    <div>
-      <h2>What I will read</h2>
-      <ul>
-        <li>Instagram: your profile info, the lists of your posts, stories and reels, and the photos and videos they point to</li>
-        <li>YouTube: your channel info, video titles and descriptions, and uploads unless marked private or unlisted</li>
-      </ul>
-    </div>
-    <div>
-      <h2>What I will never open</h2>
-      <ul>
-        <li>Your messages, contacts and searches</li>
-        <li>YouTube watch history, comments, live chat and subscriptions</li>
-        <li>YouTube uploads marked private or unlisted, ad data, and anything else in the export</li>
-      </ul>
-    </div>
+<a class="skip-link" href="#main">Skip to content</a>
+<header class="app-header">
+  <div class="header-inner">
+    <a class="brand" href="/" aria-label="Exposure home"><svg class="brand-mark" aria-hidden="true"><use href="/static/icons.svg#shield"></use></svg><span>Exposure<span class="brand-sub">Personal privacy audit</span></span></a>
+    <span class="local-status"><svg class="icon" aria-hidden="true"><use href="/static/icons.svg#lock"></use></svg>Runs on this device</span>
   </div>
-  <p class="note">YouTube support is experimental and has not been checked against a real Takeout export.
-    If a video's visibility is missing or cannot be read, it is included in the audit and may be flagged even if it is private.</p>
-  <p class="note">I never ask for your password, an OTP or any account login. Nothing is saved after you close the app.</p>
-
-  <form id="pick">
-    <label class="field">Your export (ZIP)
-      <input type="file" id="export" accept=".zip,application/zip" required>
-    </label>
-    <fieldset class="field">
-      <legend>Optional: your voice</legend>
-      <p class="hint">Read one sentence aloud (about 8 seconds) so I can tell your voice from other people's in reels.
-        It stays in memory and is dropped when the run ends.</p>
-      <button type="button" id="rec">Record one sentence</button>
-      <span id="rec-state" class="hint"></span>
-      <label class="hint">or pick a recording <input type="file" id="enrol" accept="audio/*"></label>
-    </fieldset>
-    <button type="submit" class="primary">Check my export</button>
-  </form>
+</header>
+<main id="main">
+<section id="start" class="view">
+  <div class="start-layout">
+    <div class="intro">
+      <div class="platforms"><span>Instagram</span><span>YouTube</span></div>
+      <h1>See what your <br>posts reveal.</h1>
+      <p class="lead">Personal details can add up. Review your social media export for exposure that could enable impersonation or identity misuse, then see what to change.</p>
+      <ol class="journey" aria-label="How the audit works">
+        <li><span>1</span>Import your export</li><li><span>2</span>Review exposure</li><li><span>3</span>Take action</li>
+      </ol>
+      <section class="scope-panel" aria-label="Data access">
+        <div>
+          <h2><svg class="icon" aria-hidden="true"><use href="/static/icons.svg#check"></use></svg>Included in the audit</h2>
+          <ul class="scope-list">
+            <li><strong>Instagram</strong><span>Profile details, posts, stories, reels and their media.</span></li>
+            <li><strong>YouTube</strong><span>Channel details, video titles, descriptions and eligible uploads.</span></li>
+          </ul>
+        </div>
+        <div>
+          <h2><svg class="icon" aria-hidden="true"><use href="/static/icons.svg#eye-off"></use></svg>Excluded from the audit</h2>
+          <ul class="scope-list"><li><strong>Private activity</strong><span>Messages, contacts, searches and ad data.</span></li><li><strong>YouTube activity</strong><span>Watch history, comments, live chat, subscriptions, and videos marked private or unlisted.</span></li></ul>
+        </div>
+      </section>
+      <details class="import-note">
+        <summary><svg class="icon" aria-hidden="true"><use href="/static/icons.svg#info"></use></svg>About YouTube imports<svg class="icon chevron" aria-hidden="true"><use href="/static/icons.svg#chevron"></use></svg></summary>
+        <p>YouTube passed an end-to-end check with real models on synthetic exports. Compatibility with a real Google Takeout archive remains unverified. Videos with missing or unreadable visibility are included and may be flagged even if private.</p>
+      </details>
+    </div>
+    <aside class="upload-panel">
+      <div class="panel-heading"><span class="panel-icon"><svg class="icon" aria-hidden="true"><use href="/static/icons.svg#file"></use></svg></span><div><h2>Start a privacy audit</h2><p>Your export. Your device. Your control.</p></div></div>
+      <form id="pick">
+        <label class="field-label" for="export">Social media export</label>
+        <label class="drop-zone" id="drop-zone" for="export">
+          <input type="file" id="export" accept=".zip,application/zip" required aria-describedby="export-help">
+          <svg class="upload-icon" aria-hidden="true"><use href="/static/icons.svg#upload"></use></svg>
+          <strong id="export-name">Choose a ZIP file</strong>
+          <span id="export-detail">or drag and drop it here</span>
+          <span class="file-tag">Instagram or Google Takeout</span>
+        </label>
+        <p id="export-help" class="field-help">Use Instagram's JSON export or a YouTube and YouTube Music Takeout ZIP.</p>
+        <details class="voice-options">
+          <summary><svg class="icon" aria-hidden="true"><use href="/static/icons.svg#mic"></use></svg><span>Voice matching<span class="optional">Optional</span></span><svg class="icon chevron" aria-hidden="true"><use href="/static/icons.svg#chevron"></use></svg></summary>
+          <div class="voice-content">
+            <p>A short voice reference helps distinguish your speech from other speakers in videos. It stays in memory for this run.</p>
+            <button type="button" id="rec" class="secondary"><svg class="icon" aria-hidden="true"><use href="/static/icons.svg#mic"></use></svg>Record 8 seconds</button>
+            <label class="audio-picker" for="enrol">Choose an audio file<input type="file" id="enrol" accept="audio/*"></label>
+            <span id="rec-state" class="field-help" role="status" aria-live="polite"></span>
+          </div>
+        </details>
+        <button type="submit" class="primary run-button" id="run-audit">Run privacy audit<svg class="icon" aria-hidden="true"><use href="/static/icons.svg#arrow"></use></svg></button>
+        <p class="upload-assurance"><svg class="icon" aria-hidden="true"><use href="/static/icons.svg#lock"></use></svg>No password, OTP or account connection required.</p>
+      </form>
+      <div class="panel-footer">Uploads are removed when the run is forgotten or the app exits.</div>
+    </aside>
+  </div>
 </section>
 
-<section id="progress" class="view" hidden>
-  <h1>Reading your export</h1>
-  <p id="stage">Starting…</p>
-  <progress id="bar" max="1" value="0"></progress>
-  <p class="hint">This runs on this laptop. Large exports take a few minutes.</p>
+<section id="progress" class="view" hidden aria-labelledby="progress-title">
+  <div class="state-panel">
+    <span class="state-icon"><svg class="icon" aria-hidden="true"><use href="/static/icons.svg#shield"></use></svg></span>
+    <p class="state-label">Audit in progress</p><h1 id="progress-title">Reviewing your export.</h1>
+    <p class="lead">The audit is running locally. Your content stays on this device.</p>
+    <div class="progress-block"><p id="stage" role="status" aria-live="polite">Preparing your export…</p><progress id="bar" max="1" value="0" aria-label="Audit progress"></progress><p class="field-help">Large exports can take a few minutes. Keep this window open.</p></div>
+    <div class="progress-steps" aria-hidden="true"><span>Read export</span><span>Analyse content</span><span>Build report</span></div>
+  </div>
 </section>
 
 <section id="failed" class="view" hidden>
-  <h1>I couldn't read that</h1>
-  <p id="error"></p>
-  <button type="button" data-restart>Pick another file</button>
+  <div class="state-panel error-panel">
+    <span class="state-icon"><svg class="icon" aria-hidden="true"><use href="/static/icons.svg#info"></use></svg></span>
+    <p class="state-label">Audit could not be completed</p><h1>Let's check that export.</h1>
+    <p id="error" class="lead" role="alert"></p>
+    <button type="button" class="primary" data-restart>Choose another file<svg class="icon" aria-hidden="true"><use href="/static/icons.svg#arrow"></use></svg></button>
+    <p class="field-help">No content was sent to an online wording service.</p>
+  </div>
 </section>
 
 <section id="report" class="view" hidden>
-  <header class="report-head">
-    <h1>What a stranger can build from your profile</h1>
-    <p id="counts"></p>
-  </header>
+  <header class="report-head"><div><span class="complete-label"><svg class="icon" aria-hidden="true"><use href="/static/icons.svg#check"></use></svg>Audit complete</span><h1>Your exposure report</h1><p id="counts"></p></div><button type="button" id="forget" class="secondary">Forget this run<svg class="icon" aria-hidden="true"><use href="/static/icons.svg#close"></use></svg></button></header>
   <p id="private-banner" class="banner" hidden></p>
-  <p id="summary"></p>
-  <p id="voice-note" class="note" hidden></p>
-
-  <div id="recipes"></div>
-
-  <div id="unsure-group" class="group" hidden>
-    <h2>Not sure</h2>
-    <p class="hint">I saw something but couldn't read it well enough. Have a look yourself.</p>
-    <ul id="unsure"></ul>
+  <p id="summary" class="report-summary"></p>
+  <p id="voice-note" class="note callout" hidden></p>
+  <div class="report-layout">
+    <div class="report-content">
+      <div class="section-heading"><h2>Potential misuse</h2><span>Based on the content analysed</span></div>
+      <div id="recipes"></div>
+      <div id="unsure-group" class="group" hidden><h2>Needs a closer look</h2><p class="hint">These details could not be confirmed. Review the posts before making changes.</p><ul id="unsure"></ul></div>
+      <div id="past-group" class="group" hidden><h2>Past exposure</h2><p class="hint">These details appeared in expired stories. Someone who viewed them may still have a copy.</p><ul id="past"></ul></div>
+      <div id="couldnt-group" class="group" hidden><h2>Not included in this report</h2><p class="hint">Some content was excluded or could not be analysed.</p><ul id="couldnt" class="exclusion-list"></ul></div>
+    </div>
+    <aside class="report-sidebar">
+      <div class="fix-panel"><span class="panel-icon"><svg class="icon" aria-hidden="true"><use href="/static/icons.svg#check"></use></svg></span><h2>Recommended actions</h2><p class="hint">Start here. Actions are ranked by the exposure they reduce.</p><ol id="fixes"></ol><p id="private-lower" class="note" hidden></p></div>
+      <div class="privacy-panel"><h2>Data transparency</h2><p>The report describes exposure without showing the extracted personal details.</p><button type="button" id="left" class="secondary">View wording payload<svg class="icon" aria-hidden="true"><use href="/static/icons.svg#arrow"></use></svg></button></div>
+    </aside>
   </div>
-
-  <div class="group">
-    <h2>Do these first</h2>
-    <ol id="fixes"></ol>
-    <p id="private-lower" class="note" hidden></p>
-  </div>
-
-  <div id="past-group" class="group" hidden>
-    <h2>Past exposure</h2>
-    <p class="hint">These were in stories, which have already disappeared. Anyone who saw them may still have a copy.</p>
-    <ul id="past"></ul>
-  </div>
-
-  <div id="couldnt-group" class="group" hidden>
-    <h2>What I couldn't check</h2>
-    <ul id="couldnt"></ul>
-  </div>
-
-  <div class="actions">
-    <button type="button" id="left">What left this laptop?</button>
-    <button type="button" onclick="window.print()">Print the safety card</button>
-    <button type="button" id="forget">Forget this run</button>
-  </div>
-  <div id="payload-box" class="group" hidden>
-    <h2>What left this laptop</h2>
-    <p id="sent-line"></p>
-    <pre id="payload"></pre>
-  </div>
+  <div id="payload-box" class="group" hidden><h2>Wording payload</h2><p id="sent-line"></p><pre id="payload"></pre></div>
 </section>
 
-<!-- Print-only page: shown on screen too, so people know it exists. -->
-<section id="card" class="card">
-  <h2>Family safety card</h2>
-  <ol>
-    <li>Agree a family code word <strong>in person</strong>. Never type it into any app or chat.</li>
-    <li>If someone calls in a family member's voice asking for money or an OTP, hang up and call them back on the number you already have. Ask for the code word.</li>
-    <li>Nobody genuine needs your OTP, PIN or a copy of your ID over a call.</li>
-    <li>Report cyber fraud: call <strong>1930</strong> (National Cyber Crime Helpline) or report at <strong>cybercrime.gov.in</strong>.</li>
-  </ol>
+<section id="card" class="safety-card">
+  <div class="safety-heading"><span class="panel-icon"><svg class="icon" aria-hidden="true"><use href="/static/icons.svg#shield"></use></svg></span><div><h2>A plan for the people who matter.</h2><p>Share these precautions with your family before an urgent call happens.</p></div><button type="button" class="secondary print-card" onclick="window.print()"><svg class="icon" aria-hidden="true"><use href="/static/icons.svg#print"></use></svg>Print safety card</button></div>
+  <ol><li><strong>Agree on a code word in person.</strong> Never type it into an app or chat.</li><li><strong>Hang up and call back.</strong> Use a number you already know if a caller asks for money or an OTP. Ask for the code word.</li><li><strong>Keep credentials private.</strong> Do not share an OTP, PIN or ID document over a call.</li><li><strong>Report cyber fraud promptly.</strong> Call <strong>1930</strong> or visit <strong>cybercrime.gov.in</strong>.</li></ol>
 </section>
-
-<dialog id="missed-dialog">
-  <form method="dialog">
-    <p>What did I miss in this post?</p>
-    <select id="missed-cat">
-      <option value="ID_DOCUMENT">An ID document</option>
-      <option value="FINANCIAL">A bank card or account detail</option>
-      <option value="TRAVEL_DOC">A ticket or boarding pass</option>
-      <option value="CONTACT">A phone number or email</option>
-      <option value="FAMILY_RELATION">A family member's name</option>
-      <option value="AWAY_STATUS">That I'm away from home</option>
-      <option value="INSTITUTION">My college or workplace</option>
-      <option value="FACE_CLEAR">A clear photo of my face</option>
-    </select>
-    <menu><button value="cancel">Cancel</button><button value="ok" class="primary">Add it</button></menu>
-  </form>
+<footer class="app-footer"><span>Exposure self-audit</span><span>Identifies exposure. Does not predict or prove fraud.</span></footer>
+<dialog id="missed-dialog" aria-labelledby="missed-title">
+  <form method="dialog"><h2 id="missed-title">Add a finding</h2><p class="hint">Select a detail that was missed in this post.</p><label class="field-label" for="missed-cat">Type of detail</label><select id="missed-cat"><option value="ID_DOCUMENT">An ID document</option><option value="FINANCIAL">A bank card or account detail</option><option value="TRAVEL_DOC">A ticket or boarding pass</option><option value="CONTACT">A phone number or email</option><option value="FAMILY_RELATION">A family member's name</option><option value="AWAY_STATUS">Being away from home</option><option value="INSTITUTION">A college or workplace</option><option value="FACE_CLEAR">A clear face photo</option></select><menu><button value="cancel" class="secondary">Cancel</button><button value="ok" class="primary">Add finding</button></menu></form>
 </dialog>
-
 </main>
-<script src="/static/app.js"></script>
+<script src="/static/app.js?v=2"></script>
 </body>
 </html>

@@ -41,7 +41,7 @@ ERRORS = {
     "html_export": "This looks like an Instagram export in HTML. Request it again and choose JSON.",
     "multi_part": "This export came in several files. Unzip them all into one folder, zip that folder, and pick it.",
     # Names both readers so the user can tell which kind of file was expected.
-    "missing_files": "I can't find Instagram or YouTube files in this ZIP.",
+    "missing_files": "No supported Instagram or YouTube export files were found. Check the ZIP and try again.",
 }
 GENERIC_ERROR = "Something went wrong while reading this export. Nothing was sent anywhere."
 

@@ -7,6 +7,9 @@ $Deck = (Resolve-Path $Deck).Path
 New-Item -ItemType Directory -Force $OutDir | Out-Null
 $OutDir = (Resolve-Path $OutDir).Path
 $app = New-Object -ComObject PowerPoint.Application
+# PowerPoint may reuse the user's running instance. Only quit an instance
+# that had no presentations, so exporting a revision cannot close their work.
+$hadPresentations = $app.Presentations.Count -gt 0
 try {
   # Open read-only, untitled, without a window: nothing on screen, no lock file.
   $p = $app.Presentations.Open($Deck, $true, $true, $false)
@@ -15,6 +18,6 @@ try {
   }
   $p.Close()
 } finally {
-  $app.Quit()
+  if (-not $hadPresentations) { $app.Quit() }
   [System.Runtime.InteropServices.Marshal]::ReleaseComObject($app) | Out-Null
 }

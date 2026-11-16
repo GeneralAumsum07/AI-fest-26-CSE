@@ -16,8 +16,8 @@ TITLES = {
     "R2": "A copy of your profile",
     "R3": "Misuse of your ID document",
 }
-EMPTY_SUMMARY = "I found nothing urgent in what I could read."
-NO_ENROL_LINE = "Speech found in {n} reels. It is probably you; record a sentence and I can be sure."
+EMPTY_SUMMARY = "No urgent exposure was identified in the content that could be analysed."
+NO_ENROL_LINE = "Speech detected in {n} videos. Add a voice reference to improve speaker matching."
 PRIVATE_BANNER = "Only followers see these. The risks apply to followers and to anyone who screenshots."
 
 _PHRASE = {
@@ -76,15 +76,15 @@ def render_local(payload: WordingPayload) -> ReportText:
 
     shown = [r for r in payload.recipes if r.level != "none"]
     if shown:
-        summary = (f"I found {len(shown)} way{'s' if len(shown) > 1 else ''} someone could misuse what you have "
-                   f"posted. Start with the first fix below.")
+        summary = (f"{len(shown)} potential misuse scenario{'s were' if len(shown) > 1 else ' was'} identified. "
+                   "Start with the recommended actions below.")
     else:
         summary = EMPTY_SUMMARY
         if any(r.not_sure for r in payload.recipes):
             summary += " Some posts need a second look; they are listed below."
     if payload.couldnt_check:
-        summary += f" I couldn't check {payload.couldnt_check} item{'s' if payload.couldnt_check > 1 else ''}; " \
-                   f"they are listed below."
+        summary += f" {payload.couldnt_check} item{'s were' if payload.couldnt_check > 1 else ' was'} not analysed; " \
+                   "review the exclusions below."
     if payload.private:
         summary = PRIVATE_BANNER + " " + summary
     return ReportText(summary=summary, recipes=recipes, fixes=fixes)
