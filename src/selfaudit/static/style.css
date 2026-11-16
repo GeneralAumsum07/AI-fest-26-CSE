@@ -180,3 +180,13 @@ menu{display:flex;justify-content:flex-end;gap:10px;padding:0;margin:25px 0 0}
 .recipe.ended { opacity: .55; }
 .level.ended { background: transparent; border: 1px solid currentColor; }
 .try-fix { display: inline-flex; gap: .35rem; align-items: center; margin-left: .5rem; font-size: .9em; cursor: pointer; }
+
+/* "Check before you post": a full-width card under the start layout. */
+.check-panel { max-width: 760px; margin: 48px 0 0; padding: 24px; background: var(--surface);
+  border: 1px solid var(--line); border-radius: var(--radius); }
+.check-panel form { display: grid; gap: 6px; margin-top: 16px; }
+.check-panel textarea { font: inherit; padding: 8px 10px; border: 1px solid var(--line); border-radius: 8px; resize: vertical; }
+.check-panel #check-run { justify-self: start; margin-top: 10px; }
+.check-result { margin-top: 18px; }
+.check-result h3.level { display: inline-block; padding: 6px 12px; border-radius: 8px; font-size: 18px; }
+.check-advice { margin: 12px 0; padding-left: 20px; }

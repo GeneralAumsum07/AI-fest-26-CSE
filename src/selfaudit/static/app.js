@@ -332,6 +332,51 @@ $("left").addEventListener("click", async () => {
   box.hidden = false;
 });
 
+// "Check before you post": one item, one answer, nothing kept. The page shows
+// only what the server returns for this item; no list of past checks is
+// built anywhere, on purpose (a running list across photos would be a
+// fact sheet about a person).
+const CHECK_CLASS = { stop: "high", look: "medium", nothing: "low" };
+$("check-form").addEventListener("submit", async (e) => {
+  e.preventDefault();
+  const file = $("check-file").files[0];
+  if (!file) return;
+  $("check-result").hidden = true;
+  $("check-run").disabled = true;
+  try {
+    const busy = await (await fetch("/api/busy")).json();
+    $("check-status").textContent = busy.busy
+      ? "An audit is running. Your check will start when it finishes."
+      : "Checking on this device…";
+    const form = new FormData();
+    form.append("file", file);
+    form.append("caption", $("check-caption").value);
+    const res = await fetch("/api/check", { method: "POST", body: form });
+    const body = await res.json();
+    if (!res.ok) { $("check-status").textContent = body.detail || "The check could not run. Try again."; return; }
+    $("check-status").textContent = "";
+    $("check-heading").textContent = body.heading;
+    $("check-heading").className = `level ${CHECK_CLASS[body.result]}`;
+    $("check-findings").replaceChildren(...body.findings.map((f) =>
+      el("li", { class: "finding" }, el("span", {}, f.what, f.confidence === "confirmed" ? null
+        : el("span", { class: "post-reference" }, f.confidence === "likely" ? "Likely" : "Not sure")))));
+    $("check-advice").replaceChildren(...body.advice.map((a) => el("li", {}, a)));
+    $("check-note").hidden = !body.note; $("check-note").textContent = body.note || "";
+    $("check-video-note").hidden = !body.video_note; $("check-video-note").textContent = body.video_note || "";
+    $("check-result").hidden = false;
+  } catch {
+    $("check-status").textContent = "The local app could not be reached. Check that it is running and try again.";
+  } finally {
+    $("check-run").disabled = false;
+  }
+});
+$("check-again").addEventListener("click", () => {
+  $("check-form").reset();
+  $("check-result").hidden = true;
+  $("check-status").textContent = "";
+  $("check-file").focus();
+});
+
 async function forgetRun() {
   if (auditId) await fetch(`/api/audits/${auditId}`, { method: "DELETE" });
   auditId = null; recorded = null; location.hash = "";

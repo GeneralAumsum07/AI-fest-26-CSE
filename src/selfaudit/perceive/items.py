@@ -42,6 +42,7 @@ def analyse_items(
     *,
     use: tuple[Reader, ...] = ALL_READERS,
     on_progress: Callable[[str, int, int], None] = lambda s, d, t: None,
+    unload: bool = True,
 ) -> tuple[list[Finding], list[Skipped]]:
     """Read every item with the readers in `use`; return grounded findings and skips.
 
@@ -75,7 +76,11 @@ def analyse_items(
                 skipped.append(Skipped(ref=it.item_id, reason="caption_error"))
             on_progress("captions", n, len(todo))
 
-    if backends.vision is not None and "vision" in use:
+    # The audit frees the GPU for the voice model next. A single-item check
+    # (check.py) passes unload=False: nothing follows it, and keeping the
+    # model warm saves the reload on the next check. Ollama still drops it
+    # after its own idle timeout.
+    if unload and backends.vision is not None and "vision" in use:
         backends.vision.unload()  # free the GPU before anything else may need it
 
     # Rules layer over caption + whatever the vision model transcribed.

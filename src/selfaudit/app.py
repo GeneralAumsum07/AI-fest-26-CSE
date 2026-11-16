@@ -17,11 +17,14 @@ from dataclasses import dataclass, field
 from pathlib import Path
 from typing import Callable, Literal
 
-from fastapi import FastAPI, File, HTTPException, Response, UploadFile
+from fastapi import FastAPI, File, Form, HTTPException, Response, UploadFile
 from fastapi.responses import FileResponse
 from fastapi.staticfiles import StaticFiles
 from pydantic import BaseModel
 
+from starlette.concurrency import run_in_threadpool
+
+from selfaudit import check
 from selfaudit.fixes import preview as preview_fixes
 from selfaudit.ingest.export import NotAnExport, open_export
 from selfaudit.models import Category, Report
@@ -186,6 +189,33 @@ def create_app(make_backends: Callable[[], AllBackends], call_llm: Callable[[str
             if wav is not None and len(wav) == 0:
                 wav = None
         return {"id": start(path, folder, wav)}
+
+    @app.get("/api/busy")
+    def busy() -> dict:
+        # Lets the page say "An audit is running" before a check queues behind it.
+        return {"busy": gpu.locked()}
+
+    @app.post("/api/check")
+    async def check_one(file: UploadFile = File(...), caption: str = Form("")) -> dict:
+        """Check before you post: one item, advice on that item only (check.py)."""
+        # Read into memory with a cap and never to disk: the file belongs to
+        # this request only and is gone when it returns.
+        data = bytearray()
+        while chunk := await file.read(1 << 20):
+            data += chunk
+            if len(data) > check.MAX_BYTES:
+                raise HTTPException(413, "This file is over 50 MB. Try a shorter video or a smaller photo.")
+        ctype = file.content_type or ""
+
+        def work() -> dict:
+            # Same lock as the audit: one model user at a time on one GPU.
+            with gpu:
+                # Caption capped at Instagram's own 2,200-character limit.
+                return check.to_body(check.check_item(bytes(data), ctype, caption[:2200], _backends()))
+        try:
+            return await run_in_threadpool(work)
+        except check.CheckError as e:
+            raise HTTPException(e.status, e.message) from None
 
     @app.get("/api/audits/{id_}/progress")
     def progress(id_: str) -> dict:
