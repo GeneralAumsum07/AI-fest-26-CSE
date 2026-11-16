@@ -1,0 +1,45 @@
+{
+  "checked_at_utc": "2026-11-16T12:33:44.176306+00:00",
+  "audit_id": "765ca939880a4a32a942d17259e4062c",
+  "after_commit": "c8da02b",
+  "real_models": true,
+  "upload": "api (same endpoint as the page)",
+  "posts_read": 2,
+  "categories": [
+    "AWAY_STATUS",
+    "CONTACT",
+    "FAMILY_RELATION",
+    "ID_DOCUMENT"
+  ],
+  "finding_counts": {
+    "video-0001:AWAY_STATUS": 1,
+    "video-0001:CONTACT": 1,
+    "video-0001:FAMILY_RELATION": 1,
+    "video-0001:ID_DOCUMENT": 1
+  },
+  "voice": {
+    "clean_seconds": 10.6,
+    "band": "moderate",
+    "enrolled": true,
+    "seconds_by_post": {
+      "video-0001": 10.6
+    }
+  },
+  "recipes": {
+    "R1": "high",
+    "R3": "high",
+    "R2": "low"
+  },
+  "skipped": [
+    {
+      "ref": "video-0003",
+      "reason": "not_public"
+    },
+    {
+      "ref": "video-0004",
+      "reason": "not_public"
+    }
+  ],
+  "fix_count": 1,
+  "sent_to_cloud": false
+}

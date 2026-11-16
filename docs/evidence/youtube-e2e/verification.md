@@ -52,8 +52,23 @@ and `report.png` in this directory. All fixtures and evidence remain git-ignored
 Added when this record was copied into the repository; the run above is
 unchanged. The duplicate ID findings from repeated keyframes were fixed
 afterwards in commit c8da02b: findings from one video now collapse to one per
-category, keeping the strongest frame. This browser run was not repeated after
-that fix; the fix is covered by unit tests only.
+category, keeping the strongest frame.
+
+## Re-check after the fix (16 November 2026, 12:33 UTC)
+
+Same synthetic Takeout ZIP and enrolment recording, same real local models,
+fresh server on port 8766. Script: `recheck.py`; result: `recheck-summary.json`.
+
+- The original run's report listed `ID_DOCUMENT` on video-0001 five times; the
+  re-check lists it once. Every (video, category) pair now appears once.
+- All of the original checks passed again unchanged: two public videos read,
+  private and unlisted excluded, the same four categories, 10.6 s of matching
+  speech, R1 and R3 high, R2 low, hidden thumbnails 404, no extracted values or
+  sentinels in the report or wording payload, nothing sent to the cloud.
+- Difference from the original run: the export was uploaded through the same
+  `/api/audits` endpoint the page calls, not through the page's file picker. The
+  finished report was then opened in the browser and read: the ID card appears
+  once. Feedback, printing and deletion were not repeated.
 
 Only this file and `summary.json` are in the repository. The other evidence
 files named above (fixtures, report JSON and screenshots) stay out of git.

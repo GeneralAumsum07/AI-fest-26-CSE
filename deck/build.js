@@ -382,7 +382,7 @@ async function fitW(file, w) {
       "Two public videos and two videos marked private/unlisted, all synthetic. The risky public video showed a generated mock ID and had contact, family and away phrases in its description. The second public video was neutral and produced no asserted finding.\n" +
       "Every model was real: Qwen3.5 4B through Ollama, GLiNER, Presidio, Silero VAD and SpeechBrain ECAPA. Matching synthetic speech counted for 10.6 seconds, moderate band, against a separately generated enrolment sentence.\n" +
       "Verified report rendering, ranked fixes, public thumbnails, hidden-media 404s, redaction, offline wording, feedback recomputation and deletion. Removing the contact finding lowered R1 from High to Medium; forgetting removed the run. The default suite also passed 203 tests.\n" +
-      "Limits: the Takeout layout and headers were guessed; no real Google Takeout has been checked. Missing or unknown visibility is included. That run showed the same ID once per video frame; this was fixed afterwards (one finding per video and category), with unit tests but no repeat of the browser run. No model thresholds or held-out numbers changed.");
+      "Limits: the Takeout layout and headers were guessed; no real Google Takeout has been checked. Missing or unknown visibility is included. That run showed the same ID once per video frame; this was fixed afterwards (one finding per video and category). A live re-check with the real models then showed the ID once instead of five times, with every other check unchanged (docs/evidence/youtube-e2e/recheck-summary.json). No model thresholds or held-out numbers changed.");
   }
 
   // =========================================================================
