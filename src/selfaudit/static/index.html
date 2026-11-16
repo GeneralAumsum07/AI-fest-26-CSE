@@ -14,28 +14,29 @@
 <main>
 
 <section id="start" class="view">
-  <h1>What can a stranger build from your Instagram?</h1>
-  <p class="lead">Pick your own Instagram data export (the JSON ZIP from "Download your information").
-     Everything is read on this laptop.</p>
+  <h1>What can a stranger build from your Instagram or YouTube?</h1>
+  <p class="lead">Pick your own data export: Instagram's JSON ZIP from "Download your information",
+     or a Google Takeout ZIP of "YouTube and YouTube Music". Everything is read on this laptop.</p>
   <div class="lists">
     <div>
       <h2>What I will read</h2>
       <ul>
-        <li>Your profile info file</li>
-        <li>The lists of your posts, stories and reels</li>
-        <li>The photos and videos those lists point to</li>
+        <li>Instagram: your profile info, the lists of your posts, stories and reels, and the photos and videos they point to</li>
+        <li>YouTube: your channel info, video titles and descriptions, and uploads unless marked private or unlisted</li>
       </ul>
     </div>
     <div>
       <h2>What I will never open</h2>
       <ul>
-        <li>Your messages</li>
-        <li>Your contacts and searches</li>
-        <li>Ad data, and anything else in the export</li>
+        <li>Your messages, contacts and searches</li>
+        <li>YouTube watch history, comments, live chat and subscriptions</li>
+        <li>YouTube uploads marked private or unlisted, ad data, and anything else in the export</li>
       </ul>
     </div>
   </div>
-  <p class="note">I never ask for your password, an OTP or your Instagram login. Nothing is saved after you close the app.</p>
+  <p class="note">YouTube support is experimental and has not been checked against a real Takeout export.
+    If a video's visibility is missing or cannot be read, it is included in the audit and may be flagged even if it is private.</p>
+  <p class="note">I never ask for your password, an OTP or any account login. Nothing is saved after you close the app.</p>
 
   <form id="pick">
     <label class="field">Your export (ZIP)

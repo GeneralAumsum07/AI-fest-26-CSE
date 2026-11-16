@@ -1,0 +1,53 @@
+<!doctype html>
+<!--
+  Title-slide hero: one made-up public post with every leak the app looks for
+  blacked out and tagged with the recipe it feeds. The redaction bar is the
+  deck's motif; this is where it is introduced. Content is invented and
+  generic on purpose (no persona name, no real place).
+-->
+<html>
+<head>
+<meta charset="utf-8">
+<link rel="stylesheet" href="out.css">
+</head>
+<body class="m-0 bg-transparent">
+<div id="frame" class="w-[560px] h-[540px] p-3 font-body">
+  <div class="rounded-2xl bg-paper text-ink shadow-[0_18px_40px_rgba(0,0,0,0.45)] overflow-hidden">
+    <!-- Post header -->
+    <div class="flex items-center gap-3 px-5 pt-4 pb-3">
+      <div class="w-10 h-10 rounded-full bg-ink/15 p-2 text-ink/60">{{icon:user-round}}</div>
+      <div>
+        <div class="font-semibold text-[16px]">your.profile</div>
+        <div class="text-[13px] text-muted">Public account</div>
+      </div>
+    </div>
+    <!-- Photo: an ID card with the number blacked out -->
+    <div class="mx-5 rounded-xl bg-[#2A2D35] h-[230px] flex items-center justify-center relative">
+      <div class="w-[290px] h-[170px] rounded-lg bg-[#E9E3D6] p-4 flex gap-4">
+        <div class="w-[78px] h-[96px] rounded bg-ink/15 p-4 text-ink/40">{{icon:user-round}}</div>
+        <div class="flex-1 flex flex-col gap-2 pt-1">
+          <div class="h-[9px] w-[80%] rounded bg-ink/25"></div>
+          <div class="h-[9px] w-[60%] rounded bg-ink/25"></div>
+          <div class="h-[9px] w-[70%] rounded bg-ink/25"></div>
+          <div class="mt-auto redact w-full">ID number · R3</div>
+        </div>
+      </div>
+    </div>
+    <!-- Caption: each leak is a redaction bar with its tag underneath -->
+    <div class="px-5 pt-4 pb-2 text-[18px] leading-[2.1]">
+      Off to <span class="redact">away · R1</span>
+      tomorrow!
+      <span class="redact">family · R1</span>
+      please water my plants. Call me on
+      <span class="redact">phone · R1</span>
+    </div>
+    <!-- Reel voice -->
+    <div class="mx-5 mb-5 mt-1 flex items-center gap-3 rounded-lg border border-ink/15 px-3 py-2.5">
+      <span class="w-6 h-6 text-ink">{{icon:audio-lines}}</span>
+      <span class="text-[15px]">Reel: 42 s of your voice</span>
+      <span class="redact ml-auto">voice · R1</span>
+    </div>
+  </div>
+</div>
+</body>
+</html>

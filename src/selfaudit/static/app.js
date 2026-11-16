@@ -17,6 +17,7 @@ const CATEGORY = {
 };
 const REASON = {
   missing_file: "the file was not in the export", outside_export: "it pointed outside the export",
+  not_public: "marked private or unlisted; excluded from the audit",
   over_limit: "over the reading limit", unreadable_video: "the video could not be read",
   unreadable_audio: "the video's sound could not be read",
   unreadable: "the file could not be read", unsupported_type: "a file type I can't read",

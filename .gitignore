@@ -9,6 +9,9 @@ __pycache__/
 *.pyc
 .pytest_cache/
 
+# Deck build dependencies are restored from package-lock.json.
+node_modules/
+
 # SpeechBrain downloads model files here on first use.
 pretrained_models/
 

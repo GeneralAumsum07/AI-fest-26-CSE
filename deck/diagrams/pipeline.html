@@ -1,0 +1,261 @@
+<!doctype html>
+<!--
+  Pipeline diagram for slide 3, rendered to PNG by render.js (headless Edge).
+  Sizing rule: the PNG is placed about 12.3 in wide, so 1300 CSS px ~ 106 px
+  per inch and 16 px text lands near 11 pt on the slide. Nothing here goes
+  below 16 px; anything that needs more words lives in the speaker notes.
+  Double-brace icon tokens are replaced with inline Lucide SVGs by render.js.
+-->
+<html>
+<head>
+<meta charset="utf-8">
+<link rel="stylesheet" href="out.css">
+</head>
+<body class="m-0 bg-transparent">
+<div id="frame" class="w-[1300px] h-[560px] font-body text-ink flex items-center p-2">
+
+  <!-- 1. Input -->
+  <div class="flex flex-col gap-3 w-[200px] shrink-0">
+    <div class="rounded-xl bg-ink text-paper px-4 py-4">
+      <div class="w-9 h-9 mb-2">
+<svg
+  class="lucide lucide-file-archive"
+  xmlns="http://www.w3.org/2000/svg"
+  width="24"
+  height="24"
+  viewBox="0 0 24 24"
+  fill="none"
+  stroke="currentColor"
+  stroke-width="2"
+  stroke-linecap="round"
+  stroke-linejoin="round"
+>
+  <path d="M13.659 22H18a2 2 0 0 0 2-2V8a2.4 2.4 0 0 0-.706-1.706l-3.588-3.588A2.4 2.4 0 0 0 14 2H6a2 2 0 0 0-2 2v11.5" />
+  <path d="M14 2v5a1 1 0 0 0 1 1h5" />
+  <path d="M8 12v-1" />
+  <path d="M8 18v-2" />
+  <path d="M8 7V6" />
+  <circle cx="8" cy="20" r="2" />
+</svg>
+</div>
+      <div class="font-head text-[24px] leading-tight">Instagram export</div>
+      <div class="text-[16px] text-paper/70 mt-1">the user's own .zip</div>
+    </div>
+    <div class="rounded-xl border-2 border-ink px-4 py-3">
+      <div class="w-7 h-7 mb-1">
+<svg
+  class="lucide lucide-folder-lock"
+  xmlns="http://www.w3.org/2000/svg"
+  width="24"
+  height="24"
+  viewBox="0 0 24 24"
+  fill="none"
+  stroke="currentColor"
+  stroke-width="2"
+  stroke-linecap="round"
+  stroke-linejoin="round"
+>
+  <rect width="8" height="5" x="14" y="17" rx="1" />
+  <path d="M10 20H4a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h3.9a2 2 0 0 1 1.69.9l.81 1.2a2 2 0 0 0 1.67.9H20a2 2 0 0 1 2 2v2.5" />
+  <path d="M20 17v-2a2 2 0 1 0-4 0v2" />
+</svg>
+</div>
+      <div class="font-head text-[19px] leading-tight">Allowlisted reader</div>
+      <div class="text-[16px] text-muted mt-1 leading-snug">no DMs, contacts or searches</div>
+    </div>
+  </div>
+
+  <div class="arrow w-[40px] h-[20px]"></div>
+
+  <!-- 2. Three independent readers -->
+  <div class="flex flex-col gap-3 w-[456px] shrink-0 py-5 px-3 border-x-[3px] border-ink rounded-md">
+    <div class="lane">
+      <div class="lane-in"><span class="ic">
+<svg
+  class="lucide lucide-image"
+  xmlns="http://www.w3.org/2000/svg"
+  width="24"
+  height="24"
+  viewBox="0 0 24 24"
+  fill="none"
+  stroke="currentColor"
+  stroke-width="2"
+  stroke-linecap="round"
+  stroke-linejoin="round"
+>
+  <rect width="18" height="18" x="3" y="3" rx="2" ry="2" />
+  <circle cx="9" cy="9" r="2" />
+  <path d="m21 15-3.086-3.086a2 2 0 0 0-2.828 0L6 21" />
+</svg>
+</span>Photos, keyframes</div>
+      <div class="lane-model">
+        <div class="font-head text-[20px] leading-tight">Qwen3.5 4B vision</div>
+        <div class="text-[16px] text-muted">local, via Ollama</div>
+      </div>
+    </div>
+    <div class="lane">
+      <div class="lane-in"><span class="ic">
+<svg
+  class="lucide lucide-type"
+  xmlns="http://www.w3.org/2000/svg"
+  width="24"
+  height="24"
+  viewBox="0 0 24 24"
+  fill="none"
+  stroke="currentColor"
+  stroke-width="2"
+  stroke-linecap="round"
+  stroke-linejoin="round"
+>
+  <path d="M12 4v16" />
+  <path d="M4 7V5a1 1 0 0 1 1-1h14a1 1 0 0 1 1 1v2" />
+  <path d="M9 20h6" />
+</svg>
+</span>Captions, bio</div>
+      <div class="lane-model">
+        <div class="font-head text-[20px] leading-tight">Rules + text readers</div>
+        <div class="text-[16px] text-muted">Presidio, checksums, GLiNER</div>
+      </div>
+    </div>
+    <div class="lane">
+      <div class="lane-in"><span class="ic">
+<svg
+  class="lucide lucide-audio-lines"
+  xmlns="http://www.w3.org/2000/svg"
+  width="24"
+  height="24"
+  viewBox="0 0 24 24"
+  fill="none"
+  stroke="currentColor"
+  stroke-width="2"
+  stroke-linecap="round"
+  stroke-linejoin="round"
+>
+  <path d="M2 10v3" />
+  <path d="M6 6v11" />
+  <path d="M10 3v18" />
+  <path d="M14 8v7" />
+  <path d="M18 5v13" />
+  <path d="M22 10v3" />
+</svg>
+</span>Reel audio</div>
+      <div class="lane-model">
+        <div class="font-head text-[20px] leading-tight">Silero VAD + ECAPA</div>
+        <div class="text-[16px] text-muted">is it your voice?</div>
+      </div>
+    </div>
+  </div>
+
+  <div class="arrow w-[40px] h-[20px]"></div>
+
+  <!-- 3. Grounding: confidence = number of readers that agree -->
+  <div class="w-[200px] shrink-0 rounded-xl border-2 border-ink px-4 py-4">
+    <div class="w-8 h-8 mb-2">
+<svg
+  class="lucide lucide-check-check"
+  xmlns="http://www.w3.org/2000/svg"
+  width="24"
+  height="24"
+  viewBox="0 0 24 24"
+  fill="none"
+  stroke="currentColor"
+  stroke-width="2"
+  stroke-linecap="round"
+  stroke-linejoin="round"
+>
+  <path d="M18 6 7 17l-5-5" />
+  <path d="m22 10-7.5 7.5L13 16" />
+</svg>
+</div>
+    <div class="font-head text-[22px] leading-tight">Grounding</div>
+    <div class="text-[16px] text-muted mt-1 leading-snug">a claimed value must be in the post</div>
+    <div class="mt-3 flex flex-col gap-1.5 text-[16px]">
+      <div><span class="pill bg-ink text-paper">2</span>confirmed</div>
+      <div><span class="pill border-2 border-ink">1</span>likely</div>
+      <div><span class="pill border-2 border-dashed border-muted text-muted">0</span>not sure</div>
+    </div>
+  </div>
+
+  <div class="arrow w-[40px] h-[20px]"></div>
+
+  <!-- 4. Recipes, then what the user sees -->
+  <div class="flex flex-col gap-3 w-[300px] shrink-0">
+    <div class="rounded-xl bg-ink text-paper px-4 py-4">
+      <div class="flex items-center gap-2"><span class="w-7 h-7">
+<svg
+  class="lucide lucide-scroll-text"
+  xmlns="http://www.w3.org/2000/svg"
+  width="24"
+  height="24"
+  viewBox="0 0 24 24"
+  fill="none"
+  stroke="currentColor"
+  stroke-width="2"
+  stroke-linecap="round"
+  stroke-linejoin="round"
+>
+  <path d="M15 12h-5" />
+  <path d="M15 8h-5" />
+  <path d="M19 17V5a2 2 0 0 0-2-2H4" />
+  <path d="M8 21h12a2 2 0 0 0 2-2v-1a1 1 0 0 0-1-1H11a1 1 0 0 0-1 1v1a2 2 0 1 1-4 0V5a2 2 0 1 0-4 0v2a1 1 0 0 0 1 1h3" />
+</svg>
+</span>
+        <span class="font-head text-[22px]">Recipes, as data</span></div>
+      <div class="flex flex-col gap-1.5 text-[17px] mt-3">
+        <div class="flex gap-2 items-center"><span class="tag">R1</span>voice-clone call</div>
+        <div class="flex gap-2 items-center"><span class="tag">R2</span>fake profile</div>
+        <div class="flex gap-2 items-center"><span class="tag">R3</span>loan / SIM fraud</div>
+      </div>
+    </div>
+    <div class="flex gap-3">
+      <div class="flex-1 rounded-xl border-2 border-ink px-3 py-3">
+        <div class="w-7 h-7 mb-1">
+<svg
+  class="lucide lucide-list-ordered"
+  xmlns="http://www.w3.org/2000/svg"
+  width="24"
+  height="24"
+  viewBox="0 0 24 24"
+  fill="none"
+  stroke="currentColor"
+  stroke-width="2"
+  stroke-linecap="round"
+  stroke-linejoin="round"
+>
+  <path d="M11 5h10" />
+  <path d="M11 12h10" />
+  <path d="M11 19h10" />
+  <path d="M4 4h1v5" />
+  <path d="M4 9h2" />
+  <path d="M6.5 20H3.4c0-1 2.6-1.925 2.6-3.5a1.5 1.5 0 0 0-2.6-1.02" />
+</svg>
+</div>
+        <div class="font-head text-[18px] leading-tight">Ranked fixes</div>
+      </div>
+      <div class="flex-1 rounded-xl border-2 border-ink px-3 py-3">
+        <div class="w-7 h-7 mb-1">
+<svg
+  class="lucide lucide-eye-off"
+  xmlns="http://www.w3.org/2000/svg"
+  width="24"
+  height="24"
+  viewBox="0 0 24 24"
+  fill="none"
+  stroke="currentColor"
+  stroke-width="2"
+  stroke-linecap="round"
+  stroke-linejoin="round"
+>
+  <path d="M10.733 5.076a10.744 10.744 0 0 1 11.205 6.575 1 1 0 0 1 0 .696 10.747 10.747 0 0 1-1.444 2.49" />
+  <path d="M14.084 14.158a3 3 0 0 1-4.242-4.242" />
+  <path d="M17.479 17.499a10.75 10.75 0 0 1-15.417-5.151 1 1 0 0 1 0-.696 10.75 10.75 0 0 1 4.446-5.143" />
+  <path d="m2 2 20 20" />
+</svg>
+</div>
+        <div class="font-head text-[18px] leading-tight">Plain report</div>
+      </div>
+    </div>
+  </div>
+</div>
+</body>
+</html>

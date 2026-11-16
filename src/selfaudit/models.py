@@ -42,7 +42,7 @@ class MediaItem(BaseModel):
 
 class Post(BaseModel):
     post_id: str
-    source: Literal["post", "story", "reel"]
+    source: Literal["post", "story", "reel", "video"]
     caption: str
     created: datetime
     media: list[MediaItem]
@@ -53,6 +53,9 @@ class Profile(BaseModel):
     username: str
     bio: str
     is_private: bool
+    # Which export reader built this. Defaulted so existing Instagram callers
+    # and stored reports need no change.
+    platform: Literal["instagram", "youtube"] = "instagram"
     posts: list[Post]  # newest first
     # "Recent" is measured from the export's newest item, not from today, so a
     # persona built last week still shows "away right now" in the demo.

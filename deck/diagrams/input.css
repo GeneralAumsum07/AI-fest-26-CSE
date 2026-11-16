@@ -1,0 +1,43 @@
+/* Tailwind v4 entry. The tokens mirror THEME in build.js so the rendered
+   diagrams and the native slide shapes share one palette. */
+@import "tailwindcss";
+@source "./*.html";
+
+@theme {
+  --color-ink: #15171C;
+  --color-paper: #F3EFE6;
+  --color-muted: #6A6E76;
+  --color-high: #E0492F;
+  --color-med: #E39B2B;
+  --color-safe: #3E8E6E;
+  /* Both ship with Windows, the same faces the .pptx names, so the PNG and
+     the live text on the slide match. */
+  --font-head: "Bahnschrift", "Segoe UI", sans-serif;
+  --font-body: "Segoe UI", sans-serif;
+}
+
+/* Lucide SVGs size to their wrapper. */
+svg { width: 100%; height: 100%; display: block; }
+
+@layer components {
+  .lane { @apply flex items-center rounded-xl border-2 border-ink/15 bg-white/60 px-3 py-3; }
+  .lane-in { @apply flex items-center gap-2 w-[175px] shrink-0 text-[17px] font-semibold; }
+  .lane-in .ic { @apply w-5 h-5 shrink-0; }
+  .lane-model { @apply flex-1 border-l-[3px] border-ink pl-3; }
+  .lane-arrow { @apply w-[34px] h-[2px] bg-ink mr-3 relative; }
+  .lane-arrow::after { content: ""; @apply absolute -right-[1px] -top-[5px] border-y-[6px] border-y-transparent border-l-[9px] border-l-ink; }
+  .arrow { @apply relative shrink-0; }
+  .arrow::before { content: ""; @apply absolute left-2 right-3 top-1/2 h-[3px] bg-ink; }
+  .arrow::after { content: ""; @apply absolute right-1 top-1/2 -translate-y-1/2 border-y-[9px] border-y-transparent border-l-[13px] border-l-ink; }
+  .pill { @apply inline-block rounded-full w-[30px] text-center text-[15px] mr-2 font-semibold; }
+  .tag { @apply font-head text-[15px] bg-high text-white rounded px-1.5 shrink-0; }
+}
+
+/* Redaction motif (post.src.html). A slot holds a bar with its tag pinned
+   underneath, so the caption keeps reading as one sentence. */
+@layer components {
+  .redact { @apply inline-block align-middle rounded-[3px] bg-ink px-2.5 text-[12px] leading-[26px] font-semibold uppercase tracking-wider text-[#FF7A5C] whitespace-nowrap; }
+  .slot { @apply relative inline-block align-middle; }
+  .slot .leak { @apply absolute left-0 top-[24px] whitespace-nowrap; }
+  .leak { @apply inline-block rounded-[4px] bg-high px-1.5 text-[11.5px] leading-[18px] font-semibold uppercase tracking-wide text-white; }
+}

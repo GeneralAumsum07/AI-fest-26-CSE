@@ -16,6 +16,8 @@ from datetime import datetime, timezone
 from pathlib import Path
 
 from selfaudit.devtools.persona import REELS_FILE, REELS_KEY
+from selfaudit.ingest import youtube
+from selfaudit.ingest.errors import NotAnExport  # re-exported: callers import it from here
 from selfaudit.ingest.textfix import repair
 from selfaudit.models import MediaItem, Post, Profile, Skipped
 
@@ -30,19 +32,6 @@ _POSTS_FILE = re.compile(r"^posts_\d+\.json$")
 
 _IMAGE = {".jpg", ".jpeg", ".png", ".webp", ".heic"}
 _VIDEO = {".mp4", ".mov"}
-
-
-class NotAnExport(Exception):
-    """Raised with a short reason the app turns into a plain message.
-
-    html_export:   the user picked HTML instead of JSON when requesting the export.
-    multi_part:    most referenced media is absent; the export came in several ZIPs.
-    missing_files: this does not look like an Instagram export at all.
-    """
-
-    def __init__(self, reason: str):
-        super().__init__(reason)
-        self.reason = reason
 
 
 class ExportSource:
@@ -68,6 +57,9 @@ class ExportSource:
         raw = [n for n in raw if not _os_junk(n)]
         self._prefix = self._wrapper(raw)
         self.names = {n[len(self._prefix):] for n in raw if n.startswith(self._prefix)}
+        # Which reader applies, decided once from the listing. None = Instagram.
+        # The YouTube root also decides what read_index will let through.
+        self.youtube_root = youtube.youtube_root(self.names)
 
     @staticmethod
     def _wrapper(names: list[str]) -> str:
@@ -75,7 +67,10 @@ class ExportSource:
         itself part of the export layout, else ""."""
         tops = {n.split("/", 1)[0] for n in names if "/" in n}
         known = {"personal_information", "account_information", "your_instagram_activity",
-                 "content", "media", "messages"}
+                 "content", "media", "messages",
+                 # A YouTube Takeout zipped one level in keeps this folder, so
+                 # the YouTube allowlist can match on its full path.
+                 youtube.YT_ROOT}
         if len(tops) == 1 and not tops & known and all("/" in n for n in names):
             return tops.pop() + "/"
         return ""
@@ -87,7 +82,12 @@ class ExportSource:
         return (self.path / self._prefix / name).read_bytes()
 
     def read_index(self, name: str):
-        """Open one of the allowlisted JSON files. Anything else is refused."""
+        """Open one of the allowlisted index files. Anything else is refused."""
+        if self.youtube_root is not None:
+            # A YouTube export gets the YouTube allowlist only: two CSV folders.
+            if not youtube.index_allowed(self.youtube_root, name):
+                raise PermissionError(f"not an allowlisted index: {name}")
+            return youtube.parse_table(self._read(name))
         folder, base = posixpath.split(name)
         is_index = folder in INDEX_DIRS and (
             _POSTS_FILE.match(base) or base in ("stories.json", REELS_FILE))
@@ -177,6 +177,11 @@ def load_profile(
     """
     src = source or open_export(path)
 
+    if src.youtube_root is not None:
+        profile, posts = youtube.load_youtube(src, src.youtube_root)
+        posts, not_checked = _cap(posts, max_items)
+        return profile.model_copy(update={"posts": posts, "not_checked": not_checked})
+
     profile_path = next((p for p in PROFILE_PATHS if src.has(p)), None)
     if profile_path is None:
         # Check for HTML before giving up so the message can say "request JSON".
@@ -244,17 +249,7 @@ def load_profile(
     posts.sort(key=lambda p: p.created, reverse=True)
     reference = posts[0].created if posts else datetime.now(timezone.utc)
 
-    not_checked: list[Skipped] = []
-    if max_items is not None:
-        kept: list[Post] = []
-        budget = max_items
-        for p in posts:
-            keep, rest = p.media[:max(budget, 0)], p.media[max(budget, 0):]
-            budget -= len(keep)
-            not_checked += [Skipped(ref=m.item_id, reason="over_limit") for m in rest]
-            if keep or not p.media:
-                kept.append(p.model_copy(update={"media": keep}))
-        posts = kept
+    posts, not_checked = _cap(posts, max_items)
 
     return Profile(
         name=fields.get("Name", ""), username=fields.get("Username", ""),
@@ -262,3 +257,22 @@ def load_profile(
         is_private=fields.get("Private Account", "").strip().lower() in ("true", "yes", "1"),
         posts=posts, reference_date=reference, couldnt_check=couldnt, not_checked=not_checked,
     )
+
+
+def _cap(posts: list[Post], max_items: int | None) -> tuple[list[Post], list[Skipped]]:
+    """Keep the newest `max_items` media items; list the rest as "not checked".
+
+    Shared by both readers so the ~5 minute wait holds whatever the platform.
+    """
+    not_checked: list[Skipped] = []
+    if max_items is None:
+        return posts, not_checked
+    kept: list[Post] = []
+    budget = max_items
+    for p in posts:
+        keep, rest = p.media[:max(budget, 0)], p.media[max(budget, 0):]
+        budget -= len(keep)
+        not_checked += [Skipped(ref=m.item_id, reason="over_limit") for m in rest]
+        if keep or not p.media:
+            kept.append(p.model_copy(update={"media": keep}))
+    return kept, not_checked
