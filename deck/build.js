@@ -532,7 +532,7 @@ async function fitW(file, w) {
   {
     const s = slide("Next");
     kicker(s, "06  WHAT'S NEXT");
-    s.addText("Four platforms built, one export reader each.", { placeholder: "title" });
+    s.addText("Roadmap: prove it on real exports, then widen it.", { placeholder: "title" });
 
     // Left: one row per platform group. The status chip reuses the risk-chip
     // shape and palette from slide 5, so "built / next / later / no" reads in
@@ -540,16 +540,21 @@ async function fitW(file, w) {
     const rows = [
       // Synthetic end-to-end verification does not establish real-export
       // compatibility or replace a held-out accuracy evaluation.
-      ["BUILT", HEX.safe, true, "Instagram, YouTube", "Both verified end to end with real models on synthetic data. YouTube: real Takeout compatibility and held-out accuracy still unverified."],
-      // Built 16 November 2026 (src/selfaudit/ingest/textexports.py). Their
-      // exports hold no photos, so only the caption path runs; the receipt,
-      // recipes and report are reused unchanged.
-      ["BUILT", HEX.safe, true, "LinkedIn, Reddit", "Text only: their exports hold no photos. Checked live with real models on synthetic exports; some column names in a real export are unconfirmed."],
+      // One row per step, in order. Only the BUILT row is a fact; every other
+      // row is a plan, and the speaker notes say why each one is in that place.
+      ["BUILT", HEX.safe, true, "Instagram, YouTube, LinkedIn, Reddit", "Photos, video and voice on the first two; text only on LinkedIn and Reddit. All checked on synthetic exports."],
+      // First, because every number so far is synthetic: real formats and a
+      // held-out score are what the current build is missing.
+      ["NEXT", HEX.med, true, "Real exports, held-out test", "Volunteers run their own exports on their own laptops. A held-out score for YouTube and text posts."],
+      ["NEXT", HEX.med, true, "Facebook, X", "Both let you download your data. One reader and allowlist each; formats not yet checked."],
+      // Captions in Hindi and Telugu are already read (perceive/patterns.py);
+      // only the offline report text is English (wording/templates.py).
+      ["LATER", HEX.muted, false, "Offline Hindi and Telugu report", "Hindi and Telugu captions are read today; the offline report is English only."],
       ["NO", HEX.high, false, "Discord, Snapchat", "Mostly private messages, and the app never reads messages."],
     ];
     for (let i = 0; i < rows.length; i++) {
       const [chip, col, filled, name, desc] = rows[i];
-      const y = 1.95 + i * 1.12;
+      const y = 1.95 + i * 0.95;   // five rows must clear the footer
       s.addShape(pres.shapes.ROUNDED_RECTANGLE, { x: MX, y, w: 1.05, h: 0.4, rectRadius: 0.06,
         fill: filled ? { color: col } : { color: HEX.paper }, line: { color: col, width: 1.5 }, objectName: `Status ${chip}` });
       s.addText(chip, { x: MX, y, w: 1.05, h: 0.4, fontSize: 11, bold: true, charSpacing: 1, align: "center", valign: "middle",
@@ -583,7 +588,7 @@ async function fitW(file, w) {
     s.addText("Not built yet.", { x: px + 0.35, y: 6.05, w: pw - 0.7, h: 0.35, fontSize: 11, italic: true, color: C.accent5,
       margin: 0, isTextBox: true });
     s.addNotes(
-      "Instagram and YouTube are built and verified end to end with real local models on synthetic data. LinkedIn and Reddit were added on 16 November 2026 as text-only readers (their exports carry no photos) and checked live with the real models on synthetic exports: the Reddit demo found an Aadhaar number and a family word; the LinkedIn demo found the phone number in the About section and the fix pointed at the profile, not a post. Their Shares.csv and comments.csv headers come from third-party parsers and are unconfirmed. YouTube's 16 November 2026 browser check verified upload, video and speech decoding, model inference, report rendering, exclusions, redaction, feedback and deletion. The Takeout layout is still guessed and has not been checked against a real archive; YouTube has not had a held-out accuracy evaluation. Videos marked private or unlisted are skipped; missing or unknown visibility is included. Everything else on this slide is a plan.\n" +
+      "Only the BUILT row is done; every other row is a plan, in the order we would do it.\nWhy real exports come first: every result so far is on synthetic data, the LinkedIn and Reddit column names come from third-party parsers, and YouTube has no held-out accuracy number yet. Volunteers would run the app on their own laptops, so their exports never leave them.\nWhy Facebook and X next: both offer a download of your own data, so the same rule holds (no username box, owner's export only). Their formats have not been checked yet.\nWhy Hindi and Telugu: the readers already match Hindi and Telugu family words in captions; the report itself is English unless online wording is switched on. Fixed offline templates would close that gap.\nInstagram and YouTube are built and verified end to end with real local models on synthetic data. LinkedIn and Reddit were added on 16 November 2026 as text-only readers (their exports carry no photos) and checked live with the real models on synthetic exports: the Reddit demo found an Aadhaar number and a family word; the LinkedIn demo found the phone number in the About section and the fix pointed at the profile, not a post. Their Shares.csv and comments.csv headers come from third-party parsers and are unconfirmed. YouTube's 16 November 2026 browser check verified upload, video and speech decoding, model inference, report rendering, exclusions, redaction, feedback and deletion. The Takeout layout is still guessed and has not been checked against a real archive; YouTube has not had a held-out accuracy evaluation. Videos marked private or unlisted are skipped; missing or unknown visibility is included. Everything else on this slide is a plan.\n" +
       "Why one reader per platform: each export has its own format and its own private parts, so the 'never opens your messages' allowlist is rebuilt per platform. The models, recipes and report do not change.\n" +
       "Why not just paste a link: anyone could paste anyone's link, which turns a self-audit into reconnaissance on strangers. Proving ownership first is what keeps it a self-audit.\n" +
       "API access per platform still needs checking before building; Instagram's API, for example, covers business and creator accounts only.");
