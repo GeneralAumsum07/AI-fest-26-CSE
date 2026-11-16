@@ -483,6 +483,49 @@ async function fitW(file, w) {
   }
 
   // =========================================================================
+  // 8b. Built in the final push: four tiles, each with one measured number.
+  // Numbers are from live runs on 2026-11-16 with the real local models on
+  // the synthetic personas (results/fix-preview/, scratchpad check runs).
+  // Single runs, not benchmarks: the notes say so.
+  // =========================================================================
+  {
+    const s = slide("Using it");
+    kicker(s, "05  USING IT");
+    s.addText("Before, during and after posting.", { placeholder: "title" });
+    const tiles = [
+      ["sliders-horizontal", "Try a fix", "High → None",
+        "Ticking the top fix ends ID misuse on the high-risk profile; two fixes take the phone-call scam from Medium to Low. A preview: nothing changes on Instagram until you do it."],
+      ["image-up", "Check before you post", "Stop · Look · Nothing",
+        "One photo or video, checked before it goes up. A mock Aadhaar: Stop, 7.6 s warm. A food photo: Nothing, 0.5 s. \"Nothing\" never says safe."],
+      ["receipt", "What was opened", "13 of 98 files",
+        "A receipt in counts: the 85 files never opened include 60 message files. Labels are fixed, never a folder name (Instagram names those after people)."],
+      ["list-checks", "Next steps and the family card", "3 checked steps",
+        "An exposed ID ends in Sanchar Saathi, UIDAI's biometric lock and 1930, each checked on the official site. The card lists what a caller might know: categories, never values."],
+    ];
+    const tw = (W - 2 * MX - 0.35) / 2, th = 2.3;
+    for (let i = 0; i < tiles.length; i++) {
+      const [ic, name, stat, desc] = tiles[i];
+      const x = MX + (i % 2) * (tw + 0.35), y = 1.85 + Math.floor(i / 2) * (th + 0.3);
+      s.addShape(pres.shapes.ROUNDED_RECTANGLE, { x, y, w: tw, h: th, fill: { color: C.background1 },
+        line: { color: HEX.line, width: 1 }, rectRadius: 0.06, objectName: `Tile ${name}` });
+      s.addShape(pres.shapes.OVAL, { x: x + 0.3, y: y + 0.3, w: 0.55, h: 0.55, fill: { color: C.text1 } });
+      s.addImage({ data: await icon(ic, HEX.paper), x: x + 0.44, y: y + 0.44, w: 0.27, h: 0.27 });
+      s.addText(name, { x: x + 1.05, y: y + 0.28, w: tw - 1.35, h: 0.32, fontFace: THEME.headFontFace, fontSize: 16,
+        bold: true, color: C.text1, margin: 0, isTextBox: true });
+      s.addText(stat, { x: x + 1.05, y: y + 0.6, w: tw - 1.35, h: 0.32, fontFace: THEME.headFontFace, fontSize: 15,
+        bold: true, color: C.accent1, margin: 0, isTextBox: true });
+      s.addText(desc, { x: x + 0.3, y: y + 1.05, w: tw - 0.6, h: th - 1.2, fontSize: 12, color: C.text1, margin: 0,
+        valign: "top", isTextBox: true });
+    }
+    s.addNotes(
+      "All four were built on the last day and checked live with the real local models on synthetic personas.\n" +
+      "Try a fix: high persona before R3 High, R1 Medium, R2 Medium; after the top fix R3 None; after two fixes R1 Low, R2 Medium. The already-fixed persona's levels equal these. It is a preview: the app cannot change Instagram.\n" +
+      "Check before you post: single timed runs. First check after a cold model load took 18 s, so warm the model before this beat. A boarding pass read as 'likely' gives Look, not Stop. The Stop/Look/Nothing rule is hand-written and has not been evaluated.\n" +
+      "Receipt: the 85 never-opened files in the demo export are synthetic placeholders added so the receipt has something to show; the reader refuses them, which the tests check.\n" +
+      "Next steps: checked on sancharsaathi.gov.in and uidai.gov.in on 16 November 2026. Fixed text, never reworded by the online wording.");
+  }
+
+  // =========================================================================
   // 9. What's next: more platforms, and the safe form of "scan my profile"
   // =========================================================================
   pres.addSection({ title: "Next" });
